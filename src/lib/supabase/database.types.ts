@@ -475,6 +475,7 @@ export type Database = {
           home_masjid_id: string | null
           id: string
           is_admin: boolean | null
+          is_superadmin: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -483,6 +484,7 @@ export type Database = {
           home_masjid_id?: string | null
           id: string
           is_admin?: boolean | null
+          is_superadmin?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -491,6 +493,7 @@ export type Database = {
           home_masjid_id?: string | null
           id?: string
           is_admin?: boolean | null
+          is_superadmin?: boolean | null
         }
         Relationships: [
           {

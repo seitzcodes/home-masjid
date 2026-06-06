@@ -46,10 +46,10 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
 
       if (userLocation) {
         // Call RPC
-        const { data, error } = await supabase.rpc("get_nearby_masjids", {
+        const { data, error } = await supabase.rpc("get_nearest_masjids", {
           user_lat: userLocation.latitude,
           user_lng: userLocation.longitude,
-          radius_meters: radiusKm * 1000,
+          max_distance_meters: radiusKm * 1000,
         });
 
         if (!error && data) {

@@ -1,72 +1,64 @@
-import { ReactNode } from 'react';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { Shield, Home, LayoutDashboard, Flag } from 'lucide-react';
+import React from "react";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { ShieldAlert } from "lucide-react";
+import Link from "next/link";
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect('/login?redirect=/admin/claims');
+    redirect("/login");
   }
 
-  // Check if user is admin
-  const { data: profile } = await (supabase.from('user_profiles') as any)
-    .select('is_admin')
-    .eq('id', session.user.id)
+  // Check if user is superadmin
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("is_superadmin")
+    .eq("id", session.user.id)
     .single();
 
-  if (!profile?.is_admin) {
-    redirect('/dashboard');
+  if (!profile || !profile.is_superadmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center space-y-4">
+          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <ShieldAlert className="w-6 h-6 text-red-600" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Access Denied</h1>
+          <p className="text-slate-600">
+            You do not have the required permissions to view the Platform Administration dashboard.
+          </p>
+          <div className="pt-4">
+            <Link href="/dashboard" className="text-sm font-medium text-[#D4AF37] hover:underline">
+              Return to your Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-surface hidden md:flex flex-col">
-        <div className="p-6 border-b border-border">
-          <Link href="/" className="flex items-center text-xl font-bold text-gradient-primary">
-            <Home className="mr-2 h-5 w-5" />
-            Admin Panel
-          </Link>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-[#0F172A] text-white py-4 px-6 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-[#D4AF37]" />
+            <h1 className="font-semibold text-lg">Platform Admin</h1>
+          </div>
+          <nav className="flex gap-6 text-sm font-medium">
+            <Link href="/admin/claims" className="text-[#D4AF37]">
+              Claims Queue
+            </Link>
+            <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">
+              Exit Admin
+            </Link>
+          </nav>
         </div>
-        
-        <nav className="flex-1 p-4 space-y-1">
-          <Link 
-            href="/admin/claims" 
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-          >
-            <Shield className="mr-3 h-5 w-5" />
-            Masjid Claims
-          </Link>
-          <Link 
-            href="/admin/reports" 
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <Flag className="mr-3 h-5 w-5" />
-            Reports
-          </Link>
-        </nav>
-        
-        <div className="p-4 border-t border-border">
-          <Link 
-            href="/dashboard" 
-            className="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <LayoutDashboard className="mr-3 h-5 w-5" />
-            Exit Admin
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="md:hidden border-b border-border p-4 flex items-center justify-between bg-surface">
-          <div className="font-bold">Admin Panel</div>
-          <Link href="/dashboard" className="text-sm text-primary">Exit</Link>
-        </div>
+      </header>
+      <main className="flex-1 max-w-7xl mx-auto w-full p-6">
         {children}
       </main>
     </div>

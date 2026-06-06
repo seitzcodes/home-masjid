@@ -57,9 +57,9 @@ export default async function MasjidProfilePage({ params }: Props) {
         lon = parseFloat(match[1]);
         lat = parseFloat(match[2]);
       }
-    } else if (masjid.gps_location.coordinates) {
-      lon = masjid.gps_location.coordinates[0];
-      lat = masjid.gps_location.coordinates[1];
+    } else if ((masjid.gps_location as any).coordinates) {
+      lon = (masjid.gps_location as any).coordinates[0];
+      lat = (masjid.gps_location as any).coordinates[1];
     }
   }
 

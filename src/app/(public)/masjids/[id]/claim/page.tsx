@@ -1,195 +1,105 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { ShieldCheck, ArrowLeft, Loader2, Info } from "lucide-react";
-import Link from "next/link";
+import React, { useState } from "react";
+import { submitClaim } from "./actions";
+import { ShieldCheck, UploadCloud, AlertCircle } from "lucide-react";
 
 export default function ClaimMasjidPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
-  const [masjid, setMasjid] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  // Form state
-  const [roleTitle, setRoleTitle] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  useEffect(() => {
-    async function fetchMasjid() {
-      const supabase = createClient();
-      
-      // Check auth
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push(`/login?redirect=/masjids/${params.id}/claim`);
-        return;
-      }
-
-      // Fetch masjid
-        const { data, error } = await (supabase.from("masjids") as any)
-        .select("*")
-        .eq("id", params.id)
-        .single();
-
-      if (error || !data) {
-        setError("Masjid not found.");
-      } else {
-        setMasjid(data);
-      }
-      setIsLoading(false);
-    }
-    fetchMasjid();
-  }, [params.id, router]);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!roleTitle.trim()) {
-      setError("Please specify your role.");
-      return;
-    }
-
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      setError("You must be logged in.");
+    const formData = new FormData(event.currentTarget);
+    formData.append("masjidId", params.id);
+
+    const result = await submitClaim(formData);
+
+    if (result?.error) {
+      setError(result.error);
       setIsSubmitting(false);
-      return;
     }
-
-    const { error: submitError } = await (supabase.from("masjid_claims") as any)
-      .insert({
-        masjid_id: params.id,
-        user_id: session.user.id,
-        role_title: roleTitle,
-        phone_number: phoneNumber,
-      });
-
-    if (submitError) {
-      console.error(submitError);
-      // Handle RLS or unique constraint errors if any
-      setError("Failed to submit claim. You may have already submitted a claim for this masjid.");
-    } else {
-      setSuccess(true);
-    }
-    setIsSubmitting(false);
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!masjid) {
-    return (
-      <div className="container mx-auto py-12 text-center text-red-500">
-        {error || "Masjid not found."}
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="container mx-auto py-12 max-w-lg animate-fade-up">
-        <div className="bg-surface p-8 rounded-2xl border border-border shadow-sm text-center">
-          <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck size={32} />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Claim Submitted!</h1>
-          <p className="text-muted-foreground mb-6">
-            Your request to claim <strong>{masjid.name}</strong> has been submitted. Our team will review it shortly.
-          </p>
-          <Link 
-            href={`/masjids/${masjid.id}`}
-            className="inline-flex items-center text-primary font-medium hover:underline"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Return to Masjid Profile
-          </Link>
-        </div>
-      </div>
-    );
+    // If successful, the server action redirects automatically
   }
 
   return (
-    <div className="container mx-auto py-12 max-w-xl">
-      <div className="mb-6">
-        <Link href={`/masjids/${masjid.id}`} className="text-sm text-primary hover:underline flex items-center">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to {masjid.name}
-        </Link>
-      </div>
-
-      <div className="bg-surface p-8 rounded-2xl border border-border shadow-sm">
-        <h1 className="text-2xl font-bold mb-2">Claim Masjid</h1>
-        <p className="text-muted-foreground mb-6">
-          Submit a request to verify and manage the profile for <strong>{masjid.name}</strong>.
-        </p>
-
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6 flex items-start text-sm">
-          <Info className="h-5 w-5 text-primary mr-3 mt-0.5 shrink-0" />
-          <p>
-            By claiming this masjid, you confirm that you are an official representative (e.g. Imam, Committee Member, Administrator) and have the authority to post updates and manage programs on its behalf.
+    <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
+      <div className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm">
+        <div className="flex flex-col space-y-1.5 p-6 bg-slate-50 border-b border-slate-100 rounded-t-lg pb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-[#0F172A] p-2 rounded-lg">
+              <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
+            </div>
+            <h3 className="text-2xl font-semibold leading-none tracking-tight text-[#0F172A]">Claim this Masjid</h3>
+          </div>
+          <p className="text-sm text-slate-500">
+            Submit your details and verification documents to gain administrative access to this masjid profile.
           </p>
         </div>
-
-        {error && (
-          <div className="p-3 mb-6 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="roleTitle" className="text-sm font-medium">Your Official Role</label>
-            <input
-              id="roleTitle"
-              type="text"
-              required
-              value={roleTitle}
-              onChange={(e) => setRoleTitle(e.target.value)}
-              placeholder="e.g. Imam, Committee Chairman, Admin"
-              className="w-full p-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="phoneNumber" className="text-sm font-medium">Phone Number</label>
-            <input
-              id="phoneNumber"
-              type="tel"
-              required
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="For verification purposes"
-              className="w-full p-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary-light transition-colors flex justify-center items-center mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Submitting Request...
-              </>
-            ) : (
-              "Submit Verification Request"
+        <form onSubmit={onSubmit}>
+          <div className="p-6 space-y-6 pt-6">
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
             )}
-          </button>
+            
+            <div className="space-y-2">
+              <label htmlFor="roleTitle" className="text-sm font-medium leading-none text-slate-900">Your Role at the Masjid</label>
+              <input 
+                id="roleTitle" 
+                name="roleTitle" 
+                placeholder="e.g. Imam, Board Member, Administrator" 
+                required 
+                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="phoneNumber" className="text-sm font-medium leading-none text-slate-900">Contact Phone Number</label>
+              <input 
+                id="phoneNumber" 
+                name="phoneNumber" 
+                type="tel"
+                placeholder="For verification calls" 
+                required 
+                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="document" className="text-sm font-medium leading-none text-slate-900">Verification Document</label>
+              <p className="text-xs text-slate-500 mb-2">
+                Please upload an official document (NPO certificate, signed board letter, or utility bill in the masjid's name).
+              </p>
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+                <input 
+                  id="document" 
+                  name="document" 
+                  type="file" 
+                  accept=".pdf,image/*"
+                  required 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
+                <span className="text-sm font-medium text-slate-700">Click to upload document</span>
+                <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG up to 5MB</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center p-6 bg-slate-50 border-t border-slate-100 rounded-b-lg pt-6">
+            <button 
+              type="submit" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm w-full bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium py-2.5 h-auto transition-all disabled:pointer-events-none disabled:opacity-50"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting Claim..." : "Submit Verification Claim"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
