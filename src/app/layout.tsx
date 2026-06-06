@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import RealtimeNotificationWrapper from "@/components/layout/RealtimeNotificationWrapper";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -33,7 +34,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <RealtimeNotificationWrapper>
+            {children}
+          </RealtimeNotificationWrapper>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
