@@ -41,14 +41,12 @@ export default async function MasjidProfilePage({ params }: Props) {
   const { data: programs } = await supabase
     .from("programs")
     .select("*")
-    .eq("masjid_id", masjidId)
-    .catch(() => ({ data: [] }));
+    .eq("masjid_id", masjidId);
 
   const { data: projects } = await supabase
     .from("projects")
     .select("*")
-    .eq("masjid_id", masjidId)
-    .catch(() => ({ data: [] }));
+    .eq("masjid_id", masjidId);
 
   // Parse location to pass to map
   let lat = null, lon = null;
