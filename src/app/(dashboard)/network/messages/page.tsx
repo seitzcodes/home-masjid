@@ -14,18 +14,16 @@ export default async function NetworkMessagesPage({
   if (!session) return null;
 
   // 1. Get user's masjids
-  const { data: facultyRoles } = await supabase
-    .from("masjid_faculty")
+  const { data: facultyRoles } = await (supabase as any).from("masjid_faculty")
     .select("masjid_id")
     .eq("user_id", session.user.id);
   
-  const myMasjidIds = facultyRoles?.map(r => r.masjid_id) || [];
+  const myMasjidIds = facultyRoles?.map((r: any) => r.masjid_id) || [];
   if (myMasjidIds.length === 0) return <div>No masjid assigned.</div>;
   const myMasjidId = myMasjidIds[0];
 
   // 2. Get active connections
-  const { data: connections } = await supabase
-    .from("masjid_connections")
+  const { data: connectionsData } = await (supabase as any).from("masjid_connections")
     .select(`
       id,
       status,
@@ -37,20 +35,22 @@ export default async function NetworkMessagesPage({
     `)
     .or(`requester_masjid_id.eq.${myMasjidId},receiver_masjid_id.eq.${myMasjidId}`);
 
+  const connections = connectionsData as any[] | null;
+
   // 3. Get messages for the active connection if selected
-  let messages = null;
-  let activeConnection = null;
+  let messages: any[] | null = null;
+  let activeConnection: any = null;
 
   if (searchParams.connection) {
     activeConnection = connections?.find(c => c.id === searchParams.connection);
     
     if (activeConnection && activeConnection.status === "accepted") {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("masjid_messages")
         .select("*")
         .eq("connection_id", activeConnection.id)
         .order("created_at", { ascending: true });
-      messages = data;
+      messages = data as any[] | null;
     }
   }
 
@@ -226,7 +226,7 @@ export default async function NetworkMessagesPage({
 
             {/* Chat Input */}
             <div className="p-4 border-t border-slate-100 bg-white">
-              <form action={sendMessage} className="flex gap-2">
+              <form action={async (formData) => { "use server"; await sendMessage(formData); }} className="flex gap-2">
                 <input type="hidden" name="senderMasjidId" value={myMasjidId} />
                 <input type="hidden" name="receiverMasjidId" value={activeConnection.requester_masjid_id === myMasjidId ? activeConnection.receiver_masjid_id : activeConnection.requester_masjid_id} />
                 <input type="hidden" name="msgType" value="standard" />

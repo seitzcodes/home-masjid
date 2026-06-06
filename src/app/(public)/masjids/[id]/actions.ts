@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { initializeTransaction } from "@/lib/paystack/client";
-import { v4 as uuidv4 } from "uuid";
 import { redirect } from "next/navigation";
 
 export async function initiateDonation(formData: FormData) {
@@ -24,7 +23,7 @@ export async function initiateDonation(formData: FormData) {
   }
 
   // Generate a unique ID for the donation record, which will be our Paystack reference
-  const donationId = uuidv4();
+  const donationId = crypto.randomUUID();
 
   // Insert pending donation
   const { error: insertError } = await supabase

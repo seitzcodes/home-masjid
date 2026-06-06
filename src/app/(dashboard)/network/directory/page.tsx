@@ -10,12 +10,11 @@ export default async function NetworkDirectoryPage() {
   if (!session) return null;
 
   // 1. Get the current user's faculty masjids to know who they are representing
-  const { data: facultyRoles } = await supabase
-    .from("masjid_faculty")
+  const { data: facultyRoles } = await (supabase as any).from("masjid_faculty")
     .select("masjid_id")
     .eq("user_id", session.user.id);
 
-  const myMasjidIds = facultyRoles?.map(r => r.masjid_id) || [];
+  const myMasjidIds = facultyRoles?.map((r: any) => r.masjid_id) || [];
 
   // 2. Fetch all verified masjids (excluding the ones the user manages)
   let query = supabase
@@ -30,10 +29,10 @@ export default async function NetworkDirectoryPage() {
   const { data: verifiedMasjids, error } = await query;
 
   // 3. Fetch existing connections for the user's masjids
-  const { data: connections } = await supabase
-    .from("masjid_connections")
+  const { data: connectionsData } = await (supabase as any).from("masjid_connections")
     .select("*")
     .or(`requester_masjid_id.in.(${myMasjidIds.join(',')}),receiver_masjid_id.in.(${myMasjidIds.join(',')})`);
+  const connections = connectionsData as any[] | null;
 
   const connectionStatusMap: Record<string, string> = {};
   connections?.forEach(conn => {

@@ -10,15 +10,14 @@ export async function sendConnectionRequest(requesterMasjidId: string, targetMas
   if (!session) return { error: "Unauthorized" };
 
   // Validate requester is faculty
-  const { data: isFaculty } = await supabase.rpc("is_faculty_member", {
+  const { data: isFaculty } = await (supabase as any).rpc("is_faculty_member", {
     check_masjid_id: requesterMasjidId,
     check_user_id: session.user.id
   });
 
   if (!isFaculty) return { error: "You must be faculty to send connection requests" };
 
-  const { error } = await supabase
-    .from("masjid_connections")
+  const { error } = await (supabase as any).from("masjid_connections")
     .insert({
       requester_masjid_id: requesterMasjidId,
       receiver_masjid_id: targetMasjidId,
@@ -44,8 +43,7 @@ export async function respondToConnection(connectionId: string, status: "accepte
   if (!session) return { error: "Unauthorized" };
 
   // Note: RLS policies ensure the user can only update if they are faculty of the receiver masjid
-  const { error } = await supabase
-    .from("masjid_connections")
+  const { error } = await (supabase as any).from("masjid_connections")
     .update({ status })
     .eq("id", connectionId);
 
@@ -81,7 +79,7 @@ export async function sendMessage(formData: FormData) {
   }
 
   // Validate requester is faculty
-  const { data: isFaculty } = await supabase.rpc("is_faculty_member", {
+  const { data: isFaculty } = await (supabase as any).rpc("is_faculty_member", {
     check_masjid_id: senderMasjidId,
     check_user_id: session.user.id
   });
@@ -89,8 +87,7 @@ export async function sendMessage(formData: FormData) {
   if (!isFaculty) return { error: "You must be faculty to send messages" };
 
   // Ensure connection exists and is accepted (we could query connection_id, but we'll enforce logically here)
-  const { data: connection } = await supabase
-    .from("masjid_connections")
+  const { data: connection } = await (supabase as any).from("masjid_connections")
     .select("id")
     .or(`and(requester_masjid_id.eq.${senderMasjidId},receiver_masjid_id.eq.${receiverMasjidId}),and(requester_masjid_id.eq.${receiverMasjidId},receiver_masjid_id.eq.${senderMasjidId})`)
     .eq("status", "accepted")
@@ -98,8 +95,7 @@ export async function sendMessage(formData: FormData) {
 
   if (!connection) return { error: "You can only message connected masjids." };
 
-  const { error } = await supabase
-    .from("masjid_messages")
+  const { error } = await (supabase as any).from("masjid_messages")
     .insert({
       connection_id: connection.id,
       sender_masjid_id: senderMasjidId,

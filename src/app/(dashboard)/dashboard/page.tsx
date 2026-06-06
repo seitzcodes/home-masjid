@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   if (masjidId) {
     // Fetch Followers count
     const { count: fCount } = await supabase
-      .from("masjid_followers")
+      .from("followers")
       .select("*", { count: "exact", head: true })
       .eq("masjid_id", masjidId);
     followerCount = fCount || 0;
@@ -78,7 +78,7 @@ export default async function DashboardPage() {
           type: "donation",
           amount: d.amount,
           projectTitle: (d.projects as any)?.title,
-          date: new Date(d.created_at).toLocaleDateString()
+          date: new Date(d.created_at as string).toLocaleDateString()
         }));
       }
     }
