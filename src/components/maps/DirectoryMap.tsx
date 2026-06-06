@@ -79,8 +79,7 @@ export function DirectoryMap({ mapboxAccessToken }: DirectoryMapProps) {
 
   const fetchAllMasjids = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('masjids')
+    const { data, error } = await (supabase.from('masjids') as any)
       .select('id, name, city, country, is_verified, gps_location')
       .eq('is_verified', true);
 
@@ -90,7 +89,7 @@ export function DirectoryMap({ mapboxAccessToken }: DirectoryMapProps) {
       return;
     }
 
-    const formattedMasjids: Masjid[] = (data || []).map(m => {
+    const formattedMasjids: Masjid[] = (data || []).map((m: any) => {
       const coords = parsePoint(m.gps_location as string) || { lat: 0, lng: 0 };
       return {
         id: m.id,

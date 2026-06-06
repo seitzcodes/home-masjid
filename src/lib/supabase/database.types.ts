@@ -12,7 +12,7 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  public: {
+  home_masjid: {
     Tables: {
       comments: {
         Row: {
@@ -133,7 +133,9 @@ export type Database = {
           created_at: string | null
           id: string
           masjid_id: string | null
+          phone_number: string | null
           proof_documents: string | null
+          role_title: string
           status: string | null
           user_id: string | null
         }
@@ -141,7 +143,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           masjid_id?: string | null
+          phone_number?: string | null
           proof_documents?: string | null
+          role_title?: string
           status?: string | null
           user_id?: string | null
         }
@@ -149,7 +153,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           masjid_id?: string | null
+          phone_number?: string | null
           proof_documents?: string | null
+          role_title?: string
           status?: string | null
           user_id?: string | null
         }
@@ -174,23 +180,23 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          masjid_id: string | null
+          masjid_id: string
           role: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          masjid_id?: string | null
+          masjid_id: string
           role?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          masjid_id?: string | null
+          masjid_id?: string
           role?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -254,6 +260,44 @@ export type Database = {
           },
         ]
       }
+      masjid_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          masjid_id: string
+          reason: string
+          reporter_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          masjid_id: string
+          reason: string
+          reporter_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          masjid_id?: string
+          reason?: string
+          reporter_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "masjid_reports_masjid_id_fkey"
+            columns: ["masjid_id"]
+            isOneToOne: false
+            referencedRelation: "masjids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       masjids: {
         Row: {
           address: string
@@ -264,6 +308,7 @@ export type Database = {
           description: string | null
           gps_location: unknown
           id: string
+          iqama_times: Json | null
           is_verified: boolean | null
           name: string
         }
@@ -276,6 +321,7 @@ export type Database = {
           description?: string | null
           gps_location?: unknown
           id?: string
+          iqama_times?: Json | null
           is_verified?: boolean | null
           name: string
         }
@@ -288,6 +334,7 @@ export type Database = {
           description?: string | null
           gps_location?: unknown
           id?: string
+          iqama_times?: Json | null
           is_verified?: boolean | null
           name?: string
         }
@@ -427,6 +474,7 @@ export type Database = {
           full_name: string
           home_masjid_id: string | null
           id: string
+          is_admin: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -434,6 +482,7 @@ export type Database = {
           full_name: string
           home_masjid_id?: string | null
           id: string
+          is_admin?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -441,6 +490,7 @@ export type Database = {
           full_name?: string
           home_masjid_id?: string | null
           id?: string
+          is_admin?: boolean | null
         }
         Relationships: [
           {
@@ -600,7 +650,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  public: {
+  home_masjid: {
     Enums: {},
   },
 } as const

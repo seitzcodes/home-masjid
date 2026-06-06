@@ -8,7 +8,7 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      db: { schema: "home_masjid" as "public" },
+      db: { schema: "home_masjid" as any },
     }
   );
 }

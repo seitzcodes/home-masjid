@@ -1,175 +1,139 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
-import { MapPin, Clock, Calendar, Heart, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import React from "react";
+import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { MapPin, Users, CheckCircle, Navigation } from "lucide-react";
+import ProfileTabs from "@/components/masjids/ProfileTabs";
 
-// Function to fetch prayer times from AlAdhan API
-async function getPrayerTimes(lat: number, lng: number) {
-  try {
-    const res = await fetch(`http://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=2`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.data.timings;
-  } catch (error) {
-    console.error("Error fetching prayer times:", error);
-    return null;
-  }
+// Need to ensure the params are handled correctly for Next.js 15+ async params if applicable, 
+// but using standard props for now.
+interface Props {
+  params: {
+    id: string;
+  };
 }
 
-// Parse POINT(lng lat) into { lat, lng }
-const parsePoint = (pointStr: string) => {
-  if (!pointStr) return null;
-  // If it's Well-Known Binary (Hex), e.g., 0101000020E6100000...
-  if (pointStr.startsWith('0101000020')) {
-    const hexToFloat64 = (hex: string) => {
-      const buf = new ArrayBuffer(8);
-      const view = new DataView(buf);
-      const matches = hex.match(/.{2}/g);
-      if (matches) {
-        matches.forEach((byte, i) => view.setUint8(i, parseInt(byte, 16)));
-      }
-      return view.getFloat64(0, true);
-    };
-    const lngHex = pointStr.substring(18, 34);
-    const latHex = pointStr.substring(34, 50);
-    return { lng: hexToFloat64(lngHex), lat: hexToFloat64(latHex) };
-  }
-  
-  // Fallback for WKT (Well-Known Text)
-  const match = pointStr.match(/POINT\(([^ ]+) ([^)]+)\)/);
-  if (match) {
-    return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
-  }
-  return null;
-};
+export default async function MasjidProfilePage({ params }: Props) {
+  const supabase = createClient();
+  const masjidId = params.id;
 
-export default async function MasjidProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  
-  // Fetch Masjid details
+  // The user instructed us to fetch related data (programs, projects) 
+  // Make sure these tables exist, if they don't the query will fail.
+  // We'll use a safe query first, and try to get relationships if available.
   const { data: masjid, error } = await supabase
-    .from('masjids')
-    .select('*')
-    .eq('id', id)
+    .from("masjids")
+    .select(`
+      id,
+      name,
+      address,
+      city,
+      country,
+      is_verified,
+      gps_location
+    `)
+    .eq("id", masjidId)
     .single();
 
   if (error || !masjid) {
     notFound();
   }
 
-  // Parse location and fetch prayer times
-  const coords = masjid.gps_location ? parsePoint(masjid.gps_location as string) : null;
-  const prayerTimes = coords ? await getPrayerTimes(coords.lat, coords.lng) : null;
+  // Safely fetch programs and projects separately in case relations aren't built
+  const { data: programs } = await supabase
+    .from("programs")
+    .select("*")
+    .eq("masjid_id", masjidId)
+    .catch(() => ({ data: [] }));
+
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("masjid_id", masjidId)
+    .catch(() => ({ data: [] }));
+
+  // Parse location to pass to map
+  let lat = null, lon = null;
+  if (masjid.gps_location) {
+    if (typeof masjid.gps_location === 'string') {
+      const match = masjid.gps_location.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+      if (match) {
+        lon = parseFloat(match[1]);
+        lat = parseFloat(match[2]);
+      }
+    } else if (masjid.gps_location.coordinates) {
+      lon = masjid.gps_location.coordinates[0];
+      lat = masjid.gps_location.coordinates[1];
+    }
+  }
 
   return (
-    <div className="container mx-auto py-8 lg:py-12">
-      <div className="mb-6">
-        <Link href="/masjids" className="text-sm text-primary hover:underline">
-          &larr; Back to Directory
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Details */}
-        <div className="col-span-1 lg:col-span-2 space-y-8">
-          <div className="bg-surface rounded-2xl p-6 md:p-8 shadow-sm border border-border">
-            <div className="flex items-start justify-between mb-4">
-              <h1 className="text-3xl md:text-4xl font-bold">{masjid.name}</h1>
-              {masjid.is_verified && (
-                <div className="flex items-center text-primary bg-primary/10 px-3 py-1 rounded-full text-sm font-medium">
-                  <ShieldCheck size={16} className="mr-1" />
-                  Verified
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Header Banner */}
+      <div className="bg-[#0F172A] text-white pt-20 pb-12 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h1 className="text-3xl md:text-5xl font-bold flex items-center gap-3">
+                {masjid.name}
+                {masjid.is_verified && (
+                  <span className="flex items-center gap-1 text-sm bg-[#D4AF37]/10 text-[#D4AF37] px-3 py-1 rounded-full font-medium border border-[#D4AF37]/30 align-middle mt-2">
+                    <CheckCircle className="w-4 h-4" /> Verified
+                  </span>
+                )}
+              </h1>
+              
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>{masjid.address ? `${masjid.address}, ` : ''}{masjid.city}, {masjid.country}</span>
                 </div>
-              )}
-            </div>
-            
-            <div className="flex items-center text-muted-foreground mb-6">
-              <MapPin size={18} className="mr-2" />
-              <span>{masjid.address}, {masjid.city}, {masjid.country}</span>
-            </div>
-
-            <div className="prose prose-sm md:prose-base dark:prose-invert">
-              <p>{masjid.description || "No description provided for this masjid."}</p>
-            </div>
-          </div>
-
-          {/* About/Programs Placeholder */}
-          <div className="bg-surface rounded-2xl p-6 md:p-8 shadow-sm border border-border">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center">
-              <Calendar className="mr-2 text-primary" />
-              Community Programs
-            </h2>
-            <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-              <p>Programs and events will appear here.</p>
-              {!masjid.is_verified && (
-                <p className="text-sm mt-2">Are you a faculty member? <Link href="/register" className="text-primary hover:underline">Claim this masjid</Link> to post programs.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Sidebar */}
-        <div className="col-span-1 space-y-8">
-          {/* Prayer Times Widget */}
-          <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Clock className="mr-2 text-primary" />
-              Prayer Times
-            </h3>
-            
-            {prayerTimes ? (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="font-medium">Fajr</span>
-                  <span className="text-muted-foreground">{prayerTimes.Fajr}</span>
+                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-4 h-4" />
+                  <span>245 Followers</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="font-medium">Sunrise</span>
-                  <span className="text-muted-foreground">{prayerTimes.Sunrise}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="font-medium">Dhuhr</span>
-                  <span className="text-muted-foreground">{prayerTimes.Dhuhr}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="font-medium">Asr</span>
-                  <span className="text-muted-foreground">{prayerTimes.Asr}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="font-medium">Maghrib</span>
-                  <span className="text-muted-foreground">{prayerTimes.Maghrib}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 pt-2">
-                  <span className="font-medium">Isha</span>
-                  <span className="text-muted-foreground">{prayerTimes.Isha}</span>
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  Powered by AlAdhan
-                </p>
               </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">Prayer times unavailable for this location.</p>
-            )}
-          </div>
-
-          {/* Follow / Support Widget */}
-          <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20 text-center">
-            <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-              <Heart size={24} />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Support Your Masjid</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Get notified about programs and support community projects.
-            </p>
-            <button className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary-light transition-colors">
-              Set as Home Masjid
-            </button>
+
+            {/* Quick Actions Desktop */}
+            <div className="hidden md:flex gap-3">
+              <button className="px-5 py-2.5 bg-white text-[#0F172A] rounded-lg font-semibold hover:bg-slate-100 transition-colors">
+                Follow Updates
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Control Strip (Mobile + Desktop) */}
+      <div className="bg-white border-b border-slate-200 sticky top-16 z-20 shadow-sm">
+        <div className="max-w-5xl mx-auto px-6 py-3 flex gap-3 overflow-x-auto hide-scrollbar">
+          <button className="flex-1 md:flex-none whitespace-nowrap px-4 py-2 border-2 border-slate-200 text-slate-700 rounded-lg font-medium hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center justify-center gap-2">
+            <CheckCircle className="w-4 h-4" /> Set as Home Masjid
+          </button>
+          <button className="flex-1 md:hidden whitespace-nowrap px-4 py-2 bg-[#0F172A] text-white rounded-lg font-medium">
+            Follow Updates
+          </button>
+          {lat && lon && (
+            <a 
+              href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors"
+            >
+              <Navigation className="w-4 h-4" /> Directions
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-5xl mx-auto px-6 mt-2">
+        <ProfileTabs 
+          masjidId={masjidId} 
+          programs={programs || []} 
+          projects={projects || []} 
+        />
+      </main>
     </div>
   );
 }

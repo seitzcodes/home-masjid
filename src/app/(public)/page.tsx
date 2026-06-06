@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Calendar, Heart } from "lucide-react";
 
 const features = [
@@ -29,27 +30,26 @@ export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-24 sm:py-32 lg:py-40">
-        {/* Decorative gradient blobs */}
-        <div
-          aria-hidden="true"
-          className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-accent/10 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-primary/5 blur-2xl"
-        />
+      <section className="relative flex items-center justify-center overflow-hidden py-32 sm:py-40 lg:py-48 min-h-[600px]">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/home-masjid-hero.png"
+            alt="Home Masjid Background"
+            fill
+            priority
+            className="object-cover object-center"
+          />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-[#0F172A]/75" />
+        </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Your Home. Your Masjid.{" "}
-            <span className="text-gradient-primary">Connected.</span>
+            <span className="text-accent">Connected.</span>
           </h1>
-          <p className="mt-6 mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
+          <p className="mt-6 mx-auto max-w-2xl text-lg text-slate-200 leading-relaxed">
             Discover local masjids, stay connected with community programs, and
             support meaningful projects — all from one beautiful platform.
           </p>
@@ -58,14 +58,14 @@ export default function HomePage() {
             <Link
               href="/masjids"
               id="hero-explore-cta"
-              className="rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary-dark hover:shadow-lg"
+              className="rounded-xl bg-accent px-8 py-3.5 text-sm font-semibold text-accent-foreground shadow-md transition-all hover:bg-accent-light hover:shadow-lg"
             >
               Explore Masjids
             </Link>
             <Link
               href="/register"
               id="hero-register-cta"
-              className="rounded-xl border border-primary px-8 py-3.5 text-sm font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+              className="rounded-xl border border-white px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white hover:text-primary"
             >
               Register Your Masjid
             </Link>
@@ -104,6 +104,46 @@ export default function HomePage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Our Mission Section */}
+      <section className="py-20 sm:py-24 bg-surface border-y border-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Image Column */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] lg:aspect-square animate-fade-up">
+              <Image
+                src="/media/About Us  Our Mission (Platform Focus).png"
+                alt="Our Mission - Connecting Masjids globally, starting locally"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 via-transparent to-transparent pointer-events-none" />
+            </div>
+
+            {/* Text Column */}
+            <div className="animate-fade-up" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl mb-6">
+                Our Mission
+              </h2>
+              <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+                <p>
+                  At its core, Home Masjid is about connection. We believe that the masjid is the beating heart of the community, and in today's digital age, that connection should be seamless, accessible, and deeply personal.
+                </p>
+                <p>
+                  Starting from South Africa and reaching globally, we are building a digital network that brings your local congregation to your fingertips. Whether you're a community member looking for spiritual enrichment or a faculty member managing daily operations, our platform bridges the gap with modern tools.
+                </p>
+                <div className="pt-4 flex items-center space-x-4">
+                  <div className="w-12 h-1 bg-accent rounded-full" />
+                  <p className="text-sm font-semibold text-accent uppercase tracking-wider">
+                    Rooted Locally. Connected Globally.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

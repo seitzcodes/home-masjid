@@ -23,7 +23,7 @@ export default function DashboardPage() {
           <div
             key={stat.id}
             id={stat.id}
-            className="bg-surface rounded-xl p-6 shadow-sm"
+            className="bg-surface rounded-xl p-6 shadow-sm border border-border"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -32,8 +32,8 @@ export default function DashboardPage() {
                   {stat.value}
                 </p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-                <stat.icon className="h-5 w-5 text-primary" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10">
+                <stat.icon className="h-5 w-5 text-accent" />
               </div>
             </div>
           </div>
