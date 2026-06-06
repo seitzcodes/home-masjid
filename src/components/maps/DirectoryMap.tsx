@@ -59,7 +59,7 @@ export function DirectoryMap({ mapboxAccessToken }: DirectoryMapProps) {
 
   const fetchNearbyMasjids = useCallback(async (lat: number, lng: number) => {
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_nearest_masjids', {
+    const { data, error } = await (supabase as any).rpc('get_nearest_masjids', {
       user_lat: lat,
       user_lng: lng,
       max_distance_meters: 500000 // 500km
@@ -79,7 +79,7 @@ export function DirectoryMap({ mapboxAccessToken }: DirectoryMapProps) {
 
   const fetchAllMasjids = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await (supabase.from('masjids') as any)
+    const { data, error } = await (supabase as any).from('masjids')
       .select('id, name, city, country, is_verified, gps_location')
       .eq('is_verified', true);
 

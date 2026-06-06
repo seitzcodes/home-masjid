@@ -6,14 +6,14 @@ export const metadata = { title: 'Settings | Dashboard' };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) redirect('/login');
+  if (!user) redirect('/login');
 
   // Fetch the user's first masjid to manage
-  const { data: faculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: faculty } = await (supabase as any).from('masjid_faculty')
     .select('masjid_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .limit(1)
     .single();
 
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
 
   const masjidId = faculty.masjid_id;
 
-  const { data: masjid } = await (supabase.from('masjids') as any)
+  const { data: masjid } = await (supabase as any).from('masjids')
     .select('*')
     .eq('id', masjidId)
     .single();
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
     const iqama_times = { fajr, dhuhr, asr, maghrib, isha, jumuah };
     
     // In a real app we'd verify faculty status again here before updating
-    await (supabase.from('masjids') as any).update({
+    await (supabase as any).from('masjids').update({
       name,
       description,
       address,

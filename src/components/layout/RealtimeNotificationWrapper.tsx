@@ -20,14 +20,13 @@ export default function RealtimeNotificationWrapper({ children }: RealtimeNotifi
 
     async function setupRealtime() {
       // 1. Get the current user's profile to find their home_masjid_id
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!session) return;
+      if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('user_profiles')
+      const { data: profile } = await (supabase as any).from('user_profiles')
         .select('home_masjid_id')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
 
       if (!profile || !profile.home_masjid_id) return;

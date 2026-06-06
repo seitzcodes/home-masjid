@@ -21,21 +21,19 @@ export async function POST(req: Request) {
 
     // 1. Retrieve the Audience (Followers and Home Masjid Users)
     // First, get users whose home_masjid_id is this masjid
-    const { data: homeUsers, error: homeError } = await supabase
-      .from('user_profiles')
+    const { data: homeUsers, error: homeError } = await (supabase as any).from('user_profiles')
       .select('id, full_name') // Assuming we have an email column or we fetch from auth.users
       .eq('home_masjid_id', program.masjid_id);
 
     // Second, get followers of this masjid
-    const { data: followers, error: followError } = await supabase
-      .from('followers')
+    const { data: followers, error: followError } = await (supabase as any).from('followers')
       .select('user_id')
       .eq('masjid_id', program.masjid_id);
 
     // Combine unique user IDs
     const userIds = new Set<string>();
-    homeUsers?.forEach(u => userIds.add(u.id));
-    followers?.forEach(f => userIds.add(f.user_id));
+    homeUsers?.forEach((u: any) => userIds.add(u.id));
+    followers?.forEach((f: any) => userIds.add(f.user_id));
 
     if (userIds.size === 0) {
       console.log('No audience found for masjid:', program.masjid_id);

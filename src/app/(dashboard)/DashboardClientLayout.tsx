@@ -24,6 +24,7 @@ const sidebarItems = [
   { href: "/dashboard/projects", label: "Projects", icon: FolderKanban, id: "sidebar-projects" },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, id: "sidebar-messages" },
   { href: "/dashboard/faculty", label: "Faculty", icon: Users, id: "sidebar-faculty" },
+  { href: "/dashboard/community/vouch", label: "Peer Validation", icon: ShieldCheck, id: "sidebar-vouch" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, id: "sidebar-settings" },
 ];
 
@@ -42,12 +43,14 @@ export default function DashboardClientLayout({
   children,
   masjids,
   pendingClaims,
-  userInitials
+  userInitials,
+  isSuperAdmin
 }: {
   children: React.ReactNode;
   masjids: MasjidContext[];
   pendingClaims: ClaimContext[];
   userInitials: string;
+  isSuperAdmin?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -112,6 +115,26 @@ export default function DashboardClientLayout({
                 </Link>
               );
             })}
+
+            {isSuperAdmin && (
+              <>
+                <div className="pt-4 pb-2 px-3">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
+                </div>
+                <Link
+                  href="/dashboard/claims"
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.startsWith("/dashboard/claims")
+                      ? "bg-red-500/10 text-red-400"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                  Review Claims
+                </Link>
+              </>
+            )}
           </nav>
         ) : (
           <div className="p-4 text-sm text-slate-400">

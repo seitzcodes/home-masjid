@@ -140,13 +140,13 @@ export default function HomePage() {
       </section>
 
       {/* For Masjid Faculty Section */}
-      <section id="for-faculty" className="py-24 sm:py-32 bg-slate-50 dark:bg-slate-900/50 scroll-mt-16 border-y border-border">
+      <section id="for-faculty" className="py-24 sm:py-32 bg-primary text-primary-foreground scroll-mt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+            <h2 className="text-3xl font-bold sm:text-4xl">
               For Masjid Faculty
             </h2>
-            <p className="mt-4 text-muted-foreground text-lg leading-relaxed">
+            <p className="mt-4 text-slate-300 text-lg leading-relaxed">
               Powerful tools to manage your congregation and network globally. Take control of your digital presence and foster deeper community ties.
             </p>
           </div>
@@ -155,16 +155,16 @@ export default function HomePage() {
             {facultyFeatures.map((feature, index) => (
               <div
                 key={feature.id}
-                className="animate-fade-up bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-border transition-all duration-300 hover:shadow-md hover:border-accent/30"
+                className="animate-fade-up bg-white/5 rounded-2xl p-8 shadow-sm border border-white/10 transition-all duration-300 hover:shadow-md hover:border-accent/50"
                 style={{ animationDelay: `${index * 100}ms`, animationFillMode: "backwards" }}
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 mb-6">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/20 mb-6">
                   <feature.icon className="h-7 w-7 text-accent" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">
+                <h3 className="text-xl font-semibold mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
+                <p className="text-base text-slate-300 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -174,7 +174,7 @@ export default function HomePage() {
           <div className="text-center">
             <Link
               href="/register?type=faculty"
-              className="inline-flex rounded-xl bg-foreground text-background px-8 py-4 text-base font-semibold shadow-sm transition-all hover:bg-foreground/90 hover:shadow-md"
+              className="inline-flex rounded-xl bg-accent text-accent-foreground px-8 py-4 text-base font-semibold shadow-sm transition-all hover:bg-accent-light hover:shadow-md"
             >
               Register Your Masjid
             </Link>

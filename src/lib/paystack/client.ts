@@ -4,6 +4,7 @@ export async function initializeTransaction(params: {
   reference: string;
   callback_url: string;
   metadata?: any;
+  plan?: string; // Paystack plan_code for recurring subscriptions
 }) {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) {
@@ -23,6 +24,7 @@ export async function initializeTransaction(params: {
       callback_url: params.callback_url,
       metadata: params.metadata,
       currency: "ZAR",
+      ...(params.plan ? { plan: params.plan } : {}),
     }),
   });
 

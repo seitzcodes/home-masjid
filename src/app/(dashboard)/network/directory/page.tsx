@@ -5,20 +5,19 @@ import { sendConnectionRequest } from "../actions";
 
 export default async function NetworkDirectoryPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return null;
+  if (!user) return null;
 
   // 1. Get the current user's faculty masjids to know who they are representing
   const { data: facultyRoles } = await (supabase as any).from("masjid_faculty")
     .select("masjid_id")
-    .eq("user_id", session.user.id);
+    .eq("user_id", user.id);
 
   const myMasjidIds = facultyRoles?.map((r: any) => r.masjid_id) || [];
 
   // 2. Fetch all verified masjids (excluding the ones the user manages)
-  let query = supabase
-    .from("masjids")
+  let query = (supabase as any).from("masjids")
     .select("id, name, city, country, is_verified")
     .eq("is_verified", true);
   
@@ -35,7 +34,7 @@ export default async function NetworkDirectoryPage() {
   const connections = connectionsData as any[] | null;
 
   const connectionStatusMap: Record<string, string> = {};
-  connections?.forEach(conn => {
+  connections?.forEach((conn: any) => {
     // Determine the "other" masjid id
     const otherId = myMasjidIds.includes(conn.requester_masjid_id) 
       ? conn.receiver_masjid_id 
@@ -62,7 +61,7 @@ export default async function NetworkDirectoryPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {verifiedMasjids?.map((masjid) => {
+        {verifiedMasjids?.map((masjid: any) => {
           const status = connectionStatusMap[masjid.id];
           
           return (

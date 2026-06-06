@@ -9,8 +9,7 @@ export default async function AdminClaimsPage() {
 
   // Fetch all pending claims with associated user and masjid details
   // Note: user_profiles joining requires a foreign key relation, which we have
-  const { data: claims, error } = await supabase
-    .from("masjid_claims")
+  const { data: claims, error } = await (supabase as any).from("masjid_claims")
     .select(`
       id,
       role_title,
@@ -26,6 +25,31 @@ export default async function AdminClaimsPage() {
 
   if (error) {
     console.error("Error fetching claims:", error);
+  }
+
+  // Pre-fetch signed URLs for all documents
+  const allPaths: string[] = [];
+  claims?.forEach((c: any) => {
+    if (Array.isArray(c.proof_documents)) {
+      allPaths.push(...c.proof_documents);
+    } else if (typeof c.proof_documents === "string" && c.proof_documents.trim() !== "") {
+      allPaths.push(c.proof_documents);
+    }
+  });
+
+  const signedUrlsMap: Record<string, string> = {};
+  if (allPaths.length > 0) {
+    const { data: urlsData } = await supabase.storage
+      .from('verification_documents')
+      .createSignedUrls(allPaths, 60 * 60); // 1 hour validity
+
+    if (urlsData) {
+      urlsData.forEach((item) => {
+        if (!item.error && item.signedUrl && item.path) {
+          signedUrlsMap[item.path] = item.signedUrl;
+        }
+      });
+    }
   }
 
   return (
@@ -93,26 +117,37 @@ export default async function AdminClaimsPage() {
                 {/* Action Section */}
                 <div className="p-6 md:w-80 bg-slate-50 flex flex-col justify-between">
                   <div>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Verification Document</p>
-                    {claim.proof_documents ? (
-                      <Link 
-                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/verification_documents/${claim.proof_documents}`} 
-                        target="_blank"
-                        className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors group"
-                      >
-                        <div className="bg-slate-100 p-2 rounded-md group-hover:bg-slate-200 transition-colors">
-                          <FileText className="w-4 h-4 text-slate-600" />
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Verification Documents</p>
+                    {(() => {
+                      const docs = Array.isArray(claim.proof_documents) 
+                        ? claim.proof_documents 
+                        : (claim.proof_documents ? [claim.proof_documents] : []);
+                      
+                      return docs.length > 0 ? (
+                        <div className="space-y-2">
+                          {docs.map((docPath: string, idx: number) => (
+                            <Link 
+                              key={idx}
+                              href={signedUrlsMap[docPath] || '#'} 
+                              target="_blank"
+                              className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors group"
+                            >
+                              <div className="bg-slate-100 p-2 rounded-md group-hover:bg-slate-200 transition-colors">
+                                <FileText className="w-4 h-4 text-slate-600" />
+                              </div>
+                              <div className="truncate">
+                                <p className="text-sm font-medium text-[#0F172A] truncate">Document {idx + 1}</p>
+                                <p className="text-xs text-slate-500">Opens securely</p>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
-                        <div className="truncate">
-                          <p className="text-sm font-medium text-[#0F172A] truncate">View Document</p>
-                          <p className="text-xs text-slate-500">Opens in new tab</p>
+                      ) : (
+                        <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-500 italic">
+                          No documents provided
                         </div>
-                      </Link>
-                    ) : (
-                      <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-500 italic">
-                        No document provided
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   <div className="flex gap-3 mt-6">

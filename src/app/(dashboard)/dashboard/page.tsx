@@ -3,19 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return null;
+  if (!user) return null;
 
   // 1. Get the current user's faculty masjid ID
-  const { data: facultyRoles } = await supabase
-    .from("masjid_faculty")
-    .select("masjid_id, masjids(name)")
-    .eq("user_id", session.user.id)
+  const { data: facultyRoles } = await (supabase as any).from("masjid_faculty")
+    .select("masjid_id, masjids(name, is_public_directory_listed)")
+    .eq("user_id", user.id)
     .single();
   
   const masjidId = facultyRoles?.masjid_id;
   const masjidName = (facultyRoles?.masjids as any)?.name || "your masjid";
+  const isPublic = (facultyRoles?.masjids as any)?.is_public_directory_listed ?? true;
 
   let followerCount = 0;
   let programCount = 0;
@@ -25,48 +25,42 @@ export default async function DashboardPage() {
 
   if (masjidId) {
     // Fetch Followers count
-    const { count: fCount } = await supabase
-      .from("followers")
+    const { count: fCount } = await (supabase as any).from("followers")
       .select("*", { count: "exact", head: true })
       .eq("masjid_id", masjidId);
     followerCount = fCount || 0;
 
     // Fetch Programs count
-    const { count: prCount } = await supabase
-      .from("programs")
+    const { count: prCount } = await (supabase as any).from("programs")
       .select("*", { count: "exact", head: true })
       .eq("masjid_id", masjidId);
     programCount = prCount || 0;
 
     // Fetch Posts count
-    const { count: pCount } = await supabase
-      .from("posts")
+    const { count: pCount } = await (supabase as any).from("posts")
       .select("*", { count: "exact", head: true })
       .eq("masjid_id", masjidId);
     postCount = pCount || 0;
 
     // Aggregate Donations
     // First, find projects for this masjid
-    const { data: projects } = await supabase
-      .from("projects")
+    const { data: projects } = await (supabase as any).from("projects")
       .select("id")
       .eq("masjid_id", masjidId);
     
     if (projects && projects.length > 0) {
-      const projectIds = projects.map(p => p.id);
+      const projectIds = projects.map((p: any) => p.id);
       // Currently, donations don't have masjid_id, they have project_id. 
       // But we added incrementing current_amount on projects directly in webhook!
       // So let's aggregate current_amount from projects.
-      const { data: projectsAmounts } = await supabase
-        .from("projects")
+      const { data: projectsAmounts } = await (supabase as any).from("projects")
         .select("current_amount")
         .eq("masjid_id", masjidId);
       
-      totalDonations = projectsAmounts?.reduce((sum, p) => sum + (p.current_amount || 0), 0) || 0;
+      totalDonations = projectsAmounts?.reduce((sum: number, p: any) => sum + (p.current_amount || 0), 0) || 0;
 
       // Fetch recent donations as activity
-      const { data: latestDonations } = await supabase
-        .from("donations")
+      const { data: latestDonations } = await (supabase as any).from("donations")
         .select("amount, created_at, payment_status, projects(title)")
         .in("project_id", projectIds)
         .eq("payment_status", "completed")
@@ -74,7 +68,7 @@ export default async function DashboardPage() {
         .limit(3);
       
       if (latestDonations) {
-        recentActivity = latestDonations.map(d => ({
+        recentActivity = latestDonations.map((d: any) => ({
           type: "donation",
           amount: d.amount,
           projectTitle: (d.projects as any)?.title,
@@ -96,9 +90,27 @@ export default async function DashboardPage() {
       <h2 className="text-2xl font-bold text-foreground">
         Welcome to your Dashboard
       </h2>
-      <p className="mt-1 text-muted-foreground">
+      <p className="mt-1 text-muted-foreground flex items-center gap-2">
         Here&apos;s an overview of {masjidName}&apos;s activity.
+        {!isPublic && (
+          <span className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full font-medium border border-slate-200">
+            Private Facility
+          </span>
+        )}
       </p>
+
+      {/* Private Facility Invite Link */}
+      {!isPublic && masjidId && (
+        <div className="mt-6 bg-[#0F172A] rounded-xl p-5 border border-slate-700 shadow-md flex items-center justify-between">
+          <div>
+            <h3 className="text-[#D4AF37] font-bold text-lg">Secure Invite Link</h3>
+            <p className="text-slate-300 text-sm mt-1">This facility is hidden from the public directory. Share this link for members to join.</p>
+            <div className="mt-3 bg-slate-800 rounded-md py-2 px-3 border border-slate-600 font-mono text-xs text-slate-200 select-all">
+              https://homemasjid.com/masjids/{masjidId}?invite={masjidId.split('-')[0]}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

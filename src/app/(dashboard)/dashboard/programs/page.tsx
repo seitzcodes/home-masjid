@@ -7,13 +7,13 @@ export const metadata = { title: 'Programs | Dashboard' };
 
 export default async function ProgramsPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) redirect('/login');
+  if (!user) redirect('/login');
 
-  const { data: faculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: faculty } = await (supabase as any).from('masjid_faculty')
     .select('masjid_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .limit(1)
     .single();
 
@@ -21,7 +21,7 @@ export default async function ProgramsPage() {
 
   const masjidId = faculty.masjid_id;
 
-  const { data: programs } = await (supabase.from('programs') as any)
+  const { data: programs } = await (supabase as any).from('programs')
     .select('*')
     .eq('masjid_id', masjidId)
     .order('start_time', { ascending: true });
@@ -35,7 +35,7 @@ export default async function ProgramsPage() {
     
     const supabase = await createClient();
     
-    await (supabase.from('programs') as any).insert({
+    await (supabase as any).from('programs').insert({
       masjid_id: masjidId,
       title,
       description,
@@ -50,7 +50,7 @@ export default async function ProgramsPage() {
     'use server';
     const id = formData.get('id') as string;
     const supabase = await createClient();
-    await (supabase.from('programs') as any).delete().eq('id', id).eq('masjid_id', masjidId);
+    await (supabase as any).from('programs').delete().eq('id', id).eq('masjid_id', masjidId);
     revalidatePath('/dashboard/programs');
   }
 

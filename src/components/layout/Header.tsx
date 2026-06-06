@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Menu, X, Sun, Moon, User, LogOut, LayoutDashboard, Home } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, LayoutDashboard, Home, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,10 +34,10 @@ export default function Header() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        const { data: profileData } = await supabase.from("user_profiles").select("home_masjid_id").eq("id", user.id).single();
+        const { data: profileData } = await (supabase as any).from("user_profiles").select("home_masjid_id").eq("id", user.id).single();
         setProfile(profileData);
         
-        const { count } = await supabase.from("masjid_faculty").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+        const { count } = await (supabase as any).from("masjid_faculty").select("*", { count: "exact", head: true }).eq("user_id", user.id);
         setIsFaculty(!!count);
       }
     };
@@ -108,6 +108,15 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {user && (
+              <Link
+                href="/feed"
+                id="nav-feed"
+                className="text-sm font-medium text-primary transition-colors hover:text-primary-dark"
+              >
+                My Feed
+              </Link>
+            )}
           </nav>
 
           {/* Right Actions */}
@@ -160,6 +169,14 @@ export default function Header() {
                         My Home Masjid
                       </Link>
                     ) : null}
+                    <Link
+                      href="/settings"
+                      className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-surface-hover"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
                     <button
                       onClick={handleSignOut}
                       className="flex w-full items-center px-4 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
@@ -225,6 +242,16 @@ export default function Header() {
               {link.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              href="/feed"
+              id="nav-feed-mobile"
+              className="block rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-surface-hover hover:text-primary-dark transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              My Feed
+            </Link>
+          )}
           
           {user ? (
             <div className="flex flex-col gap-2 pt-2 border-t border-border mt-2">
@@ -247,6 +274,14 @@ export default function Header() {
                   My Home Masjid
                 </Link>
               ) : null}
+              <Link
+                href="/settings"
+                className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 transition-colors"

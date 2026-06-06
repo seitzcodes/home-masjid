@@ -4,16 +4,16 @@ import DashboardClientLayout from './DashboardClientLayout';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) {
+  if (!user) {
     redirect('/login?redirect=/dashboard');
   }
 
   // Fetch the user's assigned masjids
-  const { data: faculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: faculty } = await (supabase as any).from('masjid_faculty')
     .select('masjid_id, role, masjids(name)')
-    .eq('user_id', session.user.id);
+    .eq('user_id', user.id);
 
   const masjids = (faculty || []).map((f: any) => ({
     id: f.masjid_id,
@@ -22,9 +22,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }));
 
   // Fetch pending claims
-  const { data: claims } = await (supabase.from('masjid_claims') as any)
+  const { data: claims } = await (supabase as any).from('masjid_claims')
     .select('id, status, masjids(name)')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('status', 'pending');
 
   const pendingClaims = (claims || []).map((c: any) => ({
@@ -32,10 +32,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
     masjidName: c.masjids?.name,
   }));
 
-  const userInitials = session.user.email ? session.user.email[0].toUpperCase() : 'U';
+  const userInitials = user.email ? user.email[0].toUpperCase() : 'U';
+
+  // Check if superadmin
+  const { data: profile } = await (supabase as any).from('user_profiles')
+    .select('is_superadmin')
+    .eq('id', user.id)
+    .single();
+
+  const isSuperAdmin = profile?.is_superadmin ?? false;
 
   return (
-    <DashboardClientLayout masjids={masjids} pendingClaims={pendingClaims} userInitials={userInitials}>
+    <DashboardClientLayout 
+      masjids={masjids} 
+      pendingClaims={pendingClaims} 
+      userInitials={userInitials}
+      isSuperAdmin={isSuperAdmin}
+    >
       {children}
     </DashboardClientLayout>
   );

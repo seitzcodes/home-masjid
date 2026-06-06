@@ -18,9 +18,10 @@ interface MasjidMapProps {
   masjids: Masjid[];
   homeMasjidId?: string;
   userLocation?: { latitude: number; longitude: number } | null;
+  nextPrograms?: Record<string, string>;
 }
 
-export default function MasjidMap({ masjids, homeMasjidId, userLocation }: MasjidMapProps) {
+export default function MasjidMap({ masjids, homeMasjidId, userLocation, nextPrograms = {} }: MasjidMapProps) {
   const [viewState, setViewState] = useState({
     longitude: 28.0473, // Default to South Africa
     latitude: -26.2041,
@@ -107,9 +108,11 @@ export default function MasjidMap({ masjids, homeMasjidId, userLocation }: Masji
                 <p className="text-xs text-slate-500 mt-1">
                   {selectedMasjid.is_verified ? 'Verified Masjid' : 'Community Listed'}
                 </p>
-                <div className="mt-2 text-xs font-medium text-[#D4AF37]">
-                  Next: Youth Coding Camp - 5:00 PM
-                </div>
+                {nextPrograms[selectedMasjid.id] && (
+                  <div className="mt-2 text-xs font-medium text-[#D4AF37]">
+                    Next: {nextPrograms[selectedMasjid.id]}
+                  </div>
+                )}
                 <a 
                   href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
                   target="_blank"

@@ -22,7 +22,7 @@ export default function ReportMasjidPage({ params }: { params: { id: string } })
     async function fetchMasjid() {
       const supabase = createClient();
       
-      const { data, error } = await (supabase.from("masjids") as any)
+      const { data, error } = await (supabase as any).from("masjids")
         .select("*")
         .eq("id", params.id)
         .single();
@@ -48,12 +48,12 @@ export default function ReportMasjidPage({ params }: { params: { id: string } })
     setError(null);
 
     const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
     
     // We allow anonymous reports, but if session exists, we attach user_id
-    const reporter_id = session ? session.user.id : null;
+    const reporter_id = user ? user.id : null;
 
-    const { error: submitError } = await (supabase.from("masjid_reports") as any)
+    const { error: submitError } = await (supabase as any).from("masjid_reports")
       .insert({
         masjid_id: params.id,
         reporter_id,

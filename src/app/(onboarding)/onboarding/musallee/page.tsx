@@ -32,8 +32,7 @@ export default function MusalleeOnboardingPage() {
 
       setIsLoading(true);
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("masjids")
+      const { data, error } = await (supabase as any).from("masjids")
         .select("id, name, city, country, address")
         .ilike("name", `%${searchQuery}%`)
         .limit(10);
@@ -58,19 +57,16 @@ export default function MusalleeOnboardingPage() {
     setError(null);
     try {
       const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!session) {
+      if (!user) {
         router.push("/login");
         return;
       }
 
-      const { error } = await supabase
-        .from("user_profiles")
+      const { error } = await (supabase as any).from("user_profiles")
         .update({ home_masjid_id: masjidId })
-        .eq("id", session.user.id);
+        .eq("id", user.id);
 
       if (error) {
         throw error;

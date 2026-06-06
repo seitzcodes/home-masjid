@@ -5,6 +5,12 @@ const quickLinks = [
   { href: "/", label: "Home", id: "footer-home" },
   { href: "/masjids", label: "Explore Masjids", id: "footer-explore" },
   { href: "/programs", label: "Programs", id: "footer-programs" },
+  { href: "/contact", label: "Contact Us", id: "footer-contact" },
+];
+
+const forMasjids = [
+  { href: "/register?type=faculty", label: "Register Your Masjid", id: "footer-register" },
+  { href: "/login", label: "Faculty Login", id: "footer-faculty-login" },
 ];
 
 const socialLinks = [
@@ -16,8 +22,8 @@ const socialLinks = [
 export default function Footer() {
   return (
     <footer className="bg-surface border-t border-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 pb-24 md:pb-12">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* About */}
           <div>
             <Link href="/" id="footer-logo" className="flex items-center mb-4">
@@ -49,6 +55,26 @@ export default function Footer() {
             </h4>
             <ul className="mt-3 space-y-2">
               {quickLinks.map((link) => (
+                <li key={link.id}>
+                  <Link
+                    href={link.href}
+                    id={link.id}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* For Masjids */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              For Masjids
+            </h4>
+            <ul className="mt-3 space-y-2">
+              {forMasjids.map((link) => (
                 <li key={link.id}>
                   <Link
                     href={link.href}

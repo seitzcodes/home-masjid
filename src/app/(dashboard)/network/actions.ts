@@ -5,14 +5,14 @@ import { revalidatePath } from "next/cache";
 
 export async function sendConnectionRequest(requesterMasjidId: string, targetMasjidId: string) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return { error: "Unauthorized" };
+  if (!user) return { error: "Unauthorized" };
 
   // Validate requester is faculty
   const { data: isFaculty } = await (supabase as any).rpc("is_faculty_member", {
     check_masjid_id: requesterMasjidId,
-    check_user_id: session.user.id
+    check_user_id: user.id
   });
 
   if (!isFaculty) return { error: "You must be faculty to send connection requests" };
@@ -38,9 +38,9 @@ export async function sendConnectionRequest(requesterMasjidId: string, targetMas
 
 export async function respondToConnection(connectionId: string, status: "accepted" | "declined") {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return { error: "Unauthorized" };
+  if (!user) return { error: "Unauthorized" };
 
   // Note: RLS policies ensure the user can only update if they are faculty of the receiver masjid
   const { error } = await (supabase as any).from("masjid_connections")
@@ -59,9 +59,9 @@ export async function respondToConnection(connectionId: string, status: "accepte
 
 export async function sendMessage(formData: FormData) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return { error: "Unauthorized" };
+  if (!user) return { error: "Unauthorized" };
 
   const senderMasjidId = formData.get("senderMasjidId") as string;
   const receiverMasjidId = formData.get("receiverMasjidId") as string;
@@ -81,7 +81,7 @@ export async function sendMessage(formData: FormData) {
   // Validate requester is faculty
   const { data: isFaculty } = await (supabase as any).rpc("is_faculty_member", {
     check_masjid_id: senderMasjidId,
-    check_user_id: session.user.id
+    check_user_id: user.id
   });
 
   if (!isFaculty) return { error: "You must be faculty to send messages" };

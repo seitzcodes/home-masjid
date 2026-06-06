@@ -52,9 +52,9 @@ function LoginForm() {
 
       // Check onboarding status
       const [profileRes, facultyRes, claimsRes] = await Promise.all([
-        supabase.from("user_profiles").select("home_masjid_id").eq("id", authData.user.id).single(),
-        supabase.from("masjid_faculty").select("*", { count: "exact", head: true }).eq("user_id", authData.user.id),
-        supabase.from("masjid_claims").select("*", { count: "exact", head: true }).eq("user_id", authData.user.id),
+        (supabase as any).from("user_profiles").select("home_masjid_id").eq("id", authData.user.id).single(),
+        (supabase as any).from("masjid_faculty").select("*", { count: "exact", head: true }).eq("user_id", authData.user.id),
+        (supabase as any).from("masjid_claims").select("*", { count: "exact", head: true }).eq("user_id", authData.user.id),
       ]);
 
       const needsOnboarding = !profileRes.data?.home_masjid_id && !facultyRes.count && !claimsRes.count;
@@ -111,7 +111,7 @@ function LoginForm() {
             width={180}
             height={60}
             priority
-            className="logo-light"
+            className="logo-light w-auto h-auto"
           />
           <Image
             src="/Home Masjid (Dark BG).svg"

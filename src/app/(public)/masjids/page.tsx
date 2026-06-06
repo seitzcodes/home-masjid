@@ -13,8 +13,7 @@ export default async function MasjidsDirectoryPage() {
   const supabase = await createClient();
   
   // Fetch initial base list (first 50) for fast SSR
-  const { data: initialMasjids } = await supabase
-    .from("masjids")
+  const { data: initialMasjids } = await (supabase as any).from("masjids")
     .select("*")
     .limit(50);
 

@@ -9,7 +9,7 @@ export default async function AdminClaimsPage() {
   const supabase = await createClient();
 
   // Fetch claims with masjid and user details
-  const { data: claims, error } = await (supabase.from('masjid_claims') as any)
+  const { data: claims, error } = await (supabase as any).from('masjid_claims')
     .select(`
       id,
       status,
@@ -39,18 +39,17 @@ export default async function AdminClaimsPage() {
     
     // 1. Update claim status
     // 1. Update claim status
-    await (supabase.from('masjid_claims') as any).update({ status: 'approved' }).eq('id', claimId);
+    await (supabase as any).from('masjid_claims').update({ status: 'approved' }).eq('id', claimId);
     
     // 2. Add to masjid_faculty
-    // 2. Add to masjid_faculty
-    await (supabase.from('masjid_faculty') as any).insert({
+    await (supabase as any).from('masjid_faculty').insert({
       masjid_id: masjidId,
       user_id: userId,
       role: 'admin'
     });
     
     // 3. Mark masjid as verified
-    await (supabase.from('masjids') as any).update({ is_verified: true }).eq('id', masjidId);
+    await (supabase as any).from('masjids').update({ is_verified: true }).eq('id', masjidId);
     
     // 4. Send Email Notification
     const { data: userData } = await supabase.auth.admin.getUserById(userId);
@@ -68,7 +67,7 @@ export default async function AdminClaimsPage() {
     const masjidName = formData.get('masjidName') as string;
     
     const supabase = await createClient();
-    await (supabase.from('masjid_claims') as any).update({ status: 'rejected' }).eq('id', claimId);
+    await (supabase as any).from('masjid_claims').update({ status: 'rejected' }).eq('id', claimId);
     
     // Send Email Notification
     const { data: userData } = await supabase.auth.admin.getUserById(userId);

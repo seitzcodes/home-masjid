@@ -67,7 +67,7 @@ export default function RegisterPage() {
 
       // 2. Insert user profile
       if (authData.user) {
-        const { error: profileError } = await (supabase.from("user_profiles") as any)
+        const { error: profileError } = await (supabase as any).from("user_profiles")
           .insert({
             id: authData.user.id,
             full_name: fullName,
@@ -150,7 +150,7 @@ export default function RegisterPage() {
             width={180}
             height={60}
             priority
-            className="logo-light"
+            className="logo-light w-auto h-auto"
           />
           <Image
             src="/Home Masjid (Dark BG).svg"

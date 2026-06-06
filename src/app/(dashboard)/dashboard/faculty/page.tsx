@@ -6,13 +6,13 @@ export const metadata = { title: 'Faculty | Dashboard' };
 
 export default async function FacultyPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) redirect('/login');
+  if (!user) redirect('/login');
 
-  const { data: currentFaculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: currentFaculty } = await (supabase as any).from('masjid_faculty')
     .select('masjid_id, role')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .limit(1)
     .single();
 
@@ -20,7 +20,7 @@ export default async function FacultyPage() {
 
   const masjidId = currentFaculty.masjid_id;
 
-  const { data: allFaculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: allFaculty } = await (supabase as any).from('masjid_faculty')
     .select(`
       role,
       user_id,
@@ -60,7 +60,7 @@ export default async function FacultyPage() {
                       {f.user_profiles?.full_name?.charAt(0) || 'U'}
                     </div>
                     {f.user_profiles?.full_name || 'Unknown User'}
-                    {f.user_id === session.user.id && <span className="ml-2 text-xs text-muted-foreground">(You)</span>}
+                    {f.user_id === user.id && <span className="ml-2 text-xs text-muted-foreground">(You)</span>}
                   </td>
                   <td className="px-6 py-4">
                     {f.role === 'admin' ? (

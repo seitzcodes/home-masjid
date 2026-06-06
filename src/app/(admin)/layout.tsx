@@ -6,17 +6,16 @@ import Link from "next/link";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/login");
   }
 
   // Check if user is superadmin
-  const { data: profile } = await supabase
-    .from("user_profiles")
+  const { data: profile } = await (supabase as any).from("user_profiles")
     .select("is_superadmin")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!profile || !profile.is_superadmin) {

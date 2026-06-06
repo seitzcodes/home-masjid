@@ -1,20 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, use } from "react";
 import { submitClaim } from "./actions";
 import { ShieldCheck, UploadCloud, AlertCircle } from "lucide-react";
 
-export default function ClaimMasjidPage({ params }: { params: { id: string } }) {
+export default function ClaimMasjidPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
+    if (selectedFiles.length === 0) {
+      setError("Please select at least one verification document.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData(event.currentTarget);
-    formData.append("masjidId", params.id);
+    // Append files manually since we are using controlled state for preview
+    selectedFiles.forEach(file => {
+      formData.append("documents", file);
+    });
+    formData.append("masjidId", id);
 
     const result = await submitClaim(formData);
 
@@ -74,7 +86,7 @@ export default function ClaimMasjidPage({ params }: { params: { id: string } }) 
             <div className="space-y-2">
               <label htmlFor="document" className="text-sm font-medium leading-none text-slate-900">Verification Document</label>
               <p className="text-xs text-slate-500 mb-2">
-                Please upload an official document (NPO certificate, signed board letter, or utility bill in the masjid's name).
+                Please upload official documents (NPO certificate, signed board letter, ID copy, or utility bill). You can select multiple files.
               </p>
               <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
                 <input 
@@ -82,13 +94,31 @@ export default function ClaimMasjidPage({ params }: { params: { id: string } }) 
                   name="document" 
                   type="file" 
                   accept=".pdf,image/*"
-                  required 
+                  multiple
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setSelectedFiles(Array.from(e.target.files));
+                    }
+                  }}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-                <span className="text-sm font-medium text-slate-700">Click to upload document</span>
+                <span className="text-sm font-medium text-slate-700">Click to upload documents</span>
                 <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG up to 5MB</span>
               </div>
+              
+              {selectedFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase">Selected Files ({selectedFiles.length})</p>
+                  <ul className="space-y-1">
+                    {selectedFiles.map((f, i) => (
+                      <li key={i} className="text-sm text-slate-700 bg-white border border-slate-200 px-3 py-2 rounded-md truncate">
+                        📄 {f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center p-6 bg-slate-50 border-t border-slate-100 rounded-b-lg pt-6">

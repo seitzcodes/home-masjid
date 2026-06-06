@@ -20,6 +20,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [loading, setLoading] = useState(false);
+  const [nextPrograms, setNextPrograms] = useState<Record<string, string>>({});
 
   const supabase = createClient();
   const handleRequestLocation = () => {
@@ -51,7 +52,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
 
       if (userLocation) {
         // Call RPC
-        const { data, error } = await supabase.rpc("get_nearest_masjids", {
+        const { data, error } = await (supabase as any).rpc("get_nearest_masjids", {
           user_lat: userLocation.latitude,
           user_lng: userLocation.longitude,
           max_distance_meters: radiusKm * 1000,
@@ -76,7 +77,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
         }
       } else {
         // Fallback: standard query if no location permission
-        let query = supabase.from("masjids").select("*");
+        let query = (supabase as any).from("masjids").select("*");
         if (verifiedOnly) query = query.eq("is_verified", true);
         
         // JSONB query for facilities
@@ -95,6 +96,36 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
 
     fetchLocalMasjids();
   }, [userLocation, radiusKm, verifiedOnly, facilitiesFilter, supabase]);
+
+  // Fetch next programs for the current masjids
+  useEffect(() => {
+    async function fetchNextPrograms() {
+      if (masjids.length === 0) return;
+      
+      const masjidIds = masjids.map((m: any) => m.id);
+      const now = new Date().toISOString();
+      
+      const { data, error } = await (supabase as any).from('programs')
+        .select('masjid_id, title, start_time')
+        .in('masjid_id', masjidIds)
+        .gte('start_time', now)
+        .order('start_time', { ascending: true });
+        
+      if (!error && data) {
+        const nextMap: Record<string, string> = {};
+        // Because of the order, we only take the first one we see per masjid
+        for (const prog of data) {
+          if (!nextMap[prog.masjid_id!]) {
+            const timeStr = new Date(prog.start_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            nextMap[prog.masjid_id!] = `${prog.title} - ${timeStr}`;
+          }
+        }
+        setNextPrograms(nextMap);
+      }
+    }
+    
+    fetchNextPrograms();
+  }, [masjids, supabase]);
 
   const handleSetHome = (id: string) => {
     console.log("Setting home masjid:", id);
@@ -135,7 +166,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
       <div className="flex flex-1 overflow-hidden relative">
         {/* Map Side (Left on Desktop) */}
         <div className={`flex-1 md:block ${viewMode === "map" ? "block" : "hidden"} relative`}>
-          <MasjidMap masjids={masjids} userLocation={userLocation} />
+          <MasjidMap masjids={masjids} userLocation={userLocation} nextPrograms={nextPrograms} />
         </div>
 
         {/* List Side (Right on Desktop) */}
@@ -149,6 +180,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
               <MasjidPreviewCard 
                 key={masjid.id} 
                 {...masjid} 
+                nextProgramTitle={nextPrograms[masjid.id]}
                 onSetHome={handleSetHome}
               />
             ))}

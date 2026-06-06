@@ -9,14 +9,14 @@ export default async function NetworkMessagesPage({
   searchParams: { connection?: string; tab?: string }
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) return null;
+  if (!user) return null;
 
   // 1. Get user's masjids
   const { data: facultyRoles } = await (supabase as any).from("masjid_faculty")
     .select("masjid_id")
-    .eq("user_id", session.user.id);
+    .eq("user_id", user.id);
   
   const myMasjidIds = facultyRoles?.map((r: any) => r.masjid_id) || [];
   if (myMasjidIds.length === 0) return <div>No masjid assigned.</div>;

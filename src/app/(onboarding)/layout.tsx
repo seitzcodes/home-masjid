@@ -8,11 +8,9 @@ export default async function OnboardingLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/login");
   }
 
@@ -27,7 +25,7 @@ export default async function OnboardingLayout({
             width={140}
             height={40}
             priority
-            className="dark:hidden"
+            className="dark:hidden w-auto h-auto"
           />
           <Image
             src="/Home Masjid (Dark BG).svg"
@@ -35,7 +33,7 @@ export default async function OnboardingLayout({
             width={140}
             height={40}
             priority
-            className="hidden dark:block"
+            className="hidden dark:block w-auto h-auto"
           />
         </div>
       </header>

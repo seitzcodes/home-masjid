@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { loadEnvConfig } from "@next/env";
 import path from "path";
+import tzlookup from "tz-lookup";
 
 // Load environment variables from .env.local
 const projectDir = path.resolve(__dirname, "..");
@@ -8,7 +9,7 @@ loadEnvConfig(projectDir);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const MAPBOX_API_KEY = process.env.MAPBOX_API_KEY;
+const MAPBOX_API_KEY = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Missing Supabase environment variables.");
@@ -133,6 +134,13 @@ async function seed() {
       // Convert coordinate to WKT format for PostGIS
       const pointWKT = `POINT(${lon} ${lat})`;
 
+      let timezone = null;
+      try {
+        timezone = tzlookup(lat, lon);
+      } catch (e) {
+        console.error(`Error resolving timezone for ${name}:`, e);
+      }
+
       masjidsToInsert.push({
         name,
         address,
@@ -140,6 +148,7 @@ async function seed() {
         country: "South Africa",
         gps_location: pointWKT, // Supabase automatically handles WKT strings for geography fields
         is_verified: false,
+        timezone,
       });
 
       process.stdout.write(`\rProcessed ${i + 1}/${maxElements}`);

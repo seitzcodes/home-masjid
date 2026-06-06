@@ -17,8 +17,7 @@ export default function RealtimePostFeed({ masjidId }: RealtimePostFeedProps) {
     async function loadInitialPosts() {
       // Because we may not have the posts table completely seeded, 
       // we'll try to fetch, and if empty, we provide a placeholder.
-      const { data } = await supabase
-        .from("posts")
+      const { data } = await (supabase as any).from("posts")
         .select("*")
         .eq("masjid_id", masjidId)
         .order("created_at", { ascending: false })

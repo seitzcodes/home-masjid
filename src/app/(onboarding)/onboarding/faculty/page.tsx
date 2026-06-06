@@ -29,8 +29,7 @@ export default function FacultyOnboardingPage() {
 
       setIsLoading(true);
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("masjids")
+      const { data, error } = await (supabase as any).from("masjids")
         .select("id, name, city, country, address")
         .ilike("name", `%${searchQuery}%`)
         .limit(10);
@@ -129,6 +128,7 @@ export default function FacultyOnboardingPage() {
           src="/media/For Masjids (Claiming Faculty Focus).png"
           alt="Masjid Faculty Management"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           priority
           className="object-cover object-center opacity-90"
         />

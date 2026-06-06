@@ -5,13 +5,18 @@ import RealtimePostFeed from "./RealtimePostFeed";
 import { DonationModal } from "../donation/DonationModal";
 import { Clock, MessageSquare, Calendar, Heart } from "lucide-react";
 
+import { PrayerTimes, Coordinates, CalculationMethod } from "adhan";
+import { parsePostGisPoint } from "@/lib/utils/postgis";
+
 interface ProfileTabsProps {
   masjidId: string;
   programs: any[];
   projects: any[];
+  gps_location?: string;
+  timezone?: string;
 }
 
-export default function ProfileTabs({ masjidId, programs, projects }: ProfileTabsProps) {
+export default function ProfileTabs({ masjidId, programs, projects, gps_location, timezone }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<"prayer" | "social" | "programs" | "projects">("prayer");
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
@@ -47,44 +52,96 @@ export default function ProfileTabs({ masjidId, programs, projects }: ProfileTab
 
       {/* Tab Content */}
       <div className="py-6">
-        {activeTab === "prayer" && (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 p-4 font-semibold text-slate-600 text-sm">
-              <div>Prayer</div>
-              <div className="text-center">Adhan (Calculated)</div>
-              <div className="text-right">Iqama (Congregation)</div>
-            </div>
+        {activeTab === "prayer" && (() => {
+          let prayerTimesObj = null;
+          let nextPrayer = "";
+          
+          if (gps_location) {
+            const coords = parsePostGisPoint(gps_location);
+            if (coords) {
+              const coordinates = new Coordinates(coords.lat, coords.lng);
+              const params = CalculationMethod.MuslimWorldLeague();
+              const date = new Date();
+              prayerTimesObj = new PrayerTimes(coordinates, date, params);
+              
+              const currentPrayer = prayerTimesObj.currentPrayer();
+              nextPrayer = prayerTimesObj.nextPrayer();
+              // Adhan returns 'none' if there is no next prayer today
+            }
+          }
+
+          const formatTime = (date?: Date) => {
+            if (!date) return "--:--";
             
-            {/* Mock Rows */}
-            <div className="grid grid-cols-3 p-4 border-b border-slate-100 items-center">
-              <div className="font-medium text-slate-900">Fajr</div>
-              <div className="text-center text-slate-500">05:30 AM</div>
-              <div className="text-right font-medium text-slate-700">06:00 AM</div>
+            // If the masjid has a timezone, format to that timezone, 
+            // otherwise fallback to the user's local device timezone.
+            const options: Intl.DateTimeFormatOptions = {
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            };
+            if (timezone) {
+              options.timeZone = timezone;
+            }
+            
+            return date.toLocaleTimeString("en-ZA", options);
+          };
+
+          const addMinutes = (date?: Date, minutes = 15) => {
+            if (!date) return "--:--";
+            return formatTime(new Date(date.getTime() + minutes * 60000));
+          };
+
+          const prayers = [
+            { id: "fajr", name: "Fajr", time: prayerTimesObj?.fajr },
+            { id: "dhuhr", name: "Dhuhr", time: prayerTimesObj?.dhuhr },
+            { id: "asr", name: "Asr", time: prayerTimesObj?.asr },
+            { id: "maghrib", name: "Maghrib", time: prayerTimesObj?.maghrib },
+            { id: "isha", name: "Isha", time: prayerTimesObj?.isha },
+          ];
+
+          return (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 p-4 font-semibold text-slate-600 text-sm">
+                <div>Prayer</div>
+                <div className="text-center">Adhan (Calculated)</div>
+                <div className="text-right">Iqama (Congregation)</div>
+              </div>
+              
+              {prayerTimesObj ? (
+                prayers.map((prayer) => {
+                  const isNext = nextPrayer === prayer.id;
+                  
+                  return (
+                    <div 
+                      key={prayer.id}
+                      className={`grid grid-cols-3 p-4 items-center ${
+                        isNext 
+                          ? "border border-[#D4AF37] bg-[#D4AF37]/5 relative shadow-sm z-10" 
+                          : "border-b border-slate-100 last:border-0"
+                      }`}
+                    >
+                      {isNext && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4AF37]" />}
+                      <div className={`font-medium ${isNext ? "text-[#D4AF37] font-semibold" : "text-slate-900"}`}>
+                        {prayer.name} {isNext && "(Next)"}
+                      </div>
+                      <div className={`text-center ${isNext ? "text-slate-600" : "text-slate-500"}`}>
+                        {formatTime(prayer.time)}
+                      </div>
+                      <div className={`text-right ${isNext ? "font-bold text-[#0F172A]" : "font-medium text-slate-700"}`}>
+                        {addMinutes(prayer.time, 15)}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-slate-500">
+                  <p>Prayer times are currently unavailable for this location.</p>
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-3 p-4 border-b border-slate-100 items-center">
-              <div className="font-medium text-slate-900">Dhuhr</div>
-              <div className="text-center text-slate-500">12:15 PM</div>
-              <div className="text-right font-medium text-slate-700">12:30 PM</div>
-            </div>
-            {/* Highlighted Row */}
-            <div className="grid grid-cols-3 p-4 border border-[#D4AF37] bg-[#D4AF37]/5 items-center relative shadow-sm">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4AF37]" />
-              <div className="font-semibold text-[#D4AF37]">Asr (Next)</div>
-              <div className="text-center text-slate-600">03:45 PM</div>
-              <div className="text-right font-bold text-[#0F172A]">04:00 PM</div>
-            </div>
-            <div className="grid grid-cols-3 p-4 border-b border-slate-100 items-center">
-              <div className="font-medium text-slate-900">Maghrib</div>
-              <div className="text-center text-slate-500">05:50 PM</div>
-              <div className="text-right font-medium text-slate-700">05:55 PM</div>
-            </div>
-            <div className="grid grid-cols-3 p-4 items-center">
-              <div className="font-medium text-slate-900">Isha</div>
-              <div className="text-center text-slate-500">07:10 PM</div>
-              <div className="text-right font-medium text-slate-700">07:30 PM</div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {activeTab === "social" && (
           <RealtimePostFeed masjidId={masjidId} />

@@ -7,13 +7,13 @@ export const metadata = { title: 'Posts | Dashboard' };
 
 export default async function PostsPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (!session) redirect('/login');
+  if (!user) redirect('/login');
 
-  const { data: faculty } = await (supabase.from('masjid_faculty') as any)
+  const { data: faculty } = await (supabase as any).from('masjid_faculty')
     .select('masjid_id')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .limit(1)
     .single();
 
@@ -21,7 +21,7 @@ export default async function PostsPage() {
 
   const masjidId = faculty.masjid_id;
 
-  const { data: posts } = await (supabase.from('posts') as any)
+  const { data: posts } = await (supabase as any).from('posts')
     .select('*')
     .eq('masjid_id', masjidId)
     .order('created_at', { ascending: false });
@@ -31,12 +31,12 @@ export default async function PostsPage() {
     const content = formData.get('content') as string;
     
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (session) {
-      await (supabase.from('posts') as any).insert({
+    if (user) {
+      await (supabase as any).from('posts').insert({
         masjid_id: masjidId,
-        author_id: session.user.id,
+        author_id: user.id,
         content,
       });
       revalidatePath('/dashboard/posts');
@@ -47,7 +47,7 @@ export default async function PostsPage() {
     'use server';
     const id = formData.get('id') as string;
     const supabase = await createClient();
-    await (supabase.from('posts') as any).delete().eq('id', id).eq('masjid_id', masjidId);
+    await (supabase as any).from('posts').delete().eq('id', id).eq('masjid_id', masjidId);
     revalidatePath('/dashboard/posts');
   }
 

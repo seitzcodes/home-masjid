@@ -5,22 +5,20 @@ import { revalidatePath } from "next/cache";
 
 export async function approveClaim(claimId: string) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return { error: "Unauthorized" };
+  if (!user) return { error: "Unauthorized" };
 
   // 1. Check if the current user is a superadmin
-  const { data: profile } = await supabase
-    .from("user_profiles")
+  const { data: profile } = await (supabase as any).from("user_profiles")
     .select("is_superadmin")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!profile || !profile.is_superadmin) return { error: "Unauthorized" };
 
   // 2. Fetch the claim details
-  const { data: claim, error: claimError } = await supabase
-    .from("masjid_claims")
+  const { data: claim, error: claimError } = await (supabase as any).from("masjid_claims")
     .select("*")
     .eq("id", claimId)
     .single();
@@ -28,8 +26,7 @@ export async function approveClaim(claimId: string) {
   if (claimError || !claim) return { error: "Claim not found" };
 
   // 3. Update the claim status
-  const { error: updateError } = await supabase
-    .from("masjid_claims")
+  const { error: updateError } = await (supabase as any).from("masjid_claims")
     .update({ status: "approved" })
     .eq("id", claimId);
 
@@ -37,8 +34,7 @@ export async function approveClaim(claimId: string) {
 
   // 4. Insert into masjid_faculty to grant access
   if (claim.masjid_id && claim.user_id) {
-    const { error: facultyError } = await supabase
-      .from("masjid_faculty")
+    const { error: facultyError } = await (supabase as any).from("masjid_faculty")
       .insert({
         masjid_id: claim.masjid_id,
         user_id: claim.user_id,
@@ -51,8 +47,7 @@ export async function approveClaim(claimId: string) {
     }
 
     // 5. Update the masjid to be verified
-    await supabase
-      .from("masjids")
+    await (supabase as any).from("masjids")
       .update({ is_verified: true })
       .eq("id", claim.masjid_id);
   }
@@ -65,22 +60,20 @@ export async function approveClaim(claimId: string) {
 
 export async function rejectClaim(claimId: string) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) return { error: "Unauthorized" };
+  if (!user) return { error: "Unauthorized" };
 
   // 1. Check if the current user is a superadmin
-  const { data: profile } = await supabase
-    .from("user_profiles")
+  const { data: profile } = await (supabase as any).from("user_profiles")
     .select("is_superadmin")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!profile || !profile.is_superadmin) return { error: "Unauthorized" };
 
   // 2. Update the claim status to rejected
-  const { error: updateError } = await supabase
-    .from("masjid_claims")
+  const { error: updateError } = await (supabase as any).from("masjid_claims")
     .update({ status: "rejected" })
     .eq("id", claimId);
 
