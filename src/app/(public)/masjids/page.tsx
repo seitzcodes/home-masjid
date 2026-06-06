@@ -2,6 +2,8 @@ import React from "react";
 import { createClient } from "@/lib/supabase/server";
 import DirectoryClientLayout from "@/components/masjids/DirectoryClientLayout";
 
+export const revalidate = 3600; // Revalidate every hour
+
 export const metadata = {
   title: "Explore Masjids | Home Masjid",
   description: "Discover verified masjids around the world and stay connected with your local community.",

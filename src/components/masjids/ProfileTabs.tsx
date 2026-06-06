@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import RealtimePostFeed from "./RealtimePostFeed";
+import { DonationModal } from "../donation/DonationModal";
 import { Clock, MessageSquare, Calendar, Heart } from "lucide-react";
 
 interface ProfileTabsProps {
@@ -12,6 +13,7 @@ interface ProfileTabsProps {
 
 export default function ProfileTabs({ masjidId, programs, projects }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<"prayer" | "social" | "programs" | "projects">("prayer");
+  const [selectedProject, setSelectedProject] = useState<any>(null);
 
   return (
     <div className="mt-8">
@@ -115,22 +117,25 @@ export default function ProfileTabs({ masjidId, programs, projects }: ProfileTab
                   <h4 className="font-bold text-lg">{proj.title}</h4>
                   <p className="text-slate-600 mt-2">{proj.description}</p>
                   
-                  {proj.target_amount && (
+                  {proj.goal_amount && (
                     <div className="mt-6">
                       <div className="flex justify-between text-sm mb-2">
                         <span className="font-medium">R {proj.current_amount || 0} raised</span>
-                        <span className="text-slate-500">of R {proj.target_amount}</span>
+                        <span className="text-slate-500">of R {proj.goal_amount}</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2">
                         <div 
                           className="bg-[#D4AF37] h-2 rounded-full" 
-                          style={{ width: `${Math.min(100, ((proj.current_amount || 0) / proj.target_amount) * 100)}%` }}
+                          style={{ width: `${Math.min(100, ((proj.current_amount || 0) / proj.goal_amount) * 100)}%` }}
                         ></div>
                       </div>
                     </div>
                   )}
 
-                  <button className="mt-6 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors w-full sm:w-auto">
+                  <button 
+                    onClick={() => setSelectedProject(proj)}
+                    className="mt-6 px-4 py-2 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors w-full sm:w-auto"
+                  >
                     Donate Now
                   </button>
                 </div>
@@ -143,6 +148,16 @@ export default function ProfileTabs({ masjidId, programs, projects }: ProfileTab
           </div>
         )}
       </div>
+
+      {selectedProject && (
+        <DonationModal
+          isOpen={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          projectId={selectedProject.id}
+          masjidId={masjidId}
+          projectTitle={selectedProject.title}
+        />
+      )}
     </div>
   );
 }

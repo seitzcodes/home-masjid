@@ -62,9 +62,14 @@ function LoginForm() {
       if (needsOnboarding) {
         router.push("/onboarding");
       } else if (facultyRes.count || claimsRes.count) {
-        router.push(redirectTo); // usually /dashboard
+        // Faculty goes to Masjid Maintenance
+        router.push(redirectTo);
+      } else if (profileRes.data?.home_masjid_id) {
+        // Normal user goes to their Home Masjid Updates
+        router.push(redirectTo !== "/dashboard" ? redirectTo : `/masjids/${profileRes.data.home_masjid_id}`);
       } else {
-        router.push("/masjids"); // musallee destination
+        // Fallback for normal users without a home masjid (e.g. if they somehow skipped onboarding)
+        router.push(redirectTo !== "/dashboard" ? redirectTo : "/masjids");
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
@@ -106,7 +111,7 @@ function LoginForm() {
             width={180}
             height={60}
             priority
-            className="dark:hidden"
+            className="logo-light"
           />
           <Image
             src="/Home Masjid (Dark BG).svg"
@@ -114,7 +119,7 @@ function LoginForm() {
             width={180}
             height={60}
             priority
-            className="hidden dark:block"
+            className="logo-dark"
           />
           <p className="mt-4 text-muted-foreground text-sm">
             Your community, connected

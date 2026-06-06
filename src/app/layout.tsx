@@ -16,9 +16,23 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: "Home Masjid — Your Home. Your Masjid. Connected.",
   description:
     "Home Masjid connects communities to their local masjids with accurate prayer times, community programs, fundraising projects, and more.",
+  openGraph: {
+    title: "Home Masjid",
+    description: "Connect to your local masjid with accurate prayer times, programs, and community projects.",
+    url: "/",
+    siteName: "Home Masjid",
+    locale: "en_ZA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Home Masjid",
+    description: "Connect to your local masjid with accurate prayer times, programs, and community projects.",
+  },
 };
 
 export default function RootLayout({

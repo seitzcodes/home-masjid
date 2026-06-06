@@ -3,12 +3,48 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { MapPin, Users, CheckCircle, Navigation } from "lucide-react";
 import ProfileTabs from "@/components/masjids/ProfileTabs";
+import { Metadata, ResolvingMetadata } from "next";
+import { parsePostGisPoint } from "@/lib/utils/postgis";
+
+export const revalidate = 3600; // Revalidate every hour
 
 // Need to ensure the params are handled correctly for Next.js 15+ async params if applicable, 
 // but using standard props for now.
 interface Props {
   params: {
     id: string;
+  };
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const supabase = await createClient();
+  const { data: masjid } = await supabase
+    .from("masjids")
+    .select("name, city, country, address")
+    .eq("id", params.id)
+    .single();
+
+  if (!masjid) return { title: "Masjid Not Found" };
+
+  const title = `${masjid.name} | Home Masjid`;
+  const description = `View prayer times, programs, and community projects at ${masjid.name} in ${masjid.city}, ${masjid.country}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 
@@ -50,21 +86,38 @@ export default async function MasjidProfilePage({ params }: Props) {
 
   // Parse location to pass to map
   let lat = null, lon = null;
-  if (masjid.gps_location) {
-    if (typeof masjid.gps_location === 'string') {
-      const match = masjid.gps_location.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-      if (match) {
-        lon = parseFloat(match[1]);
-        lat = parseFloat(match[2]);
-      }
-    } else if ((masjid.gps_location as any).coordinates) {
-      lon = (masjid.gps_location as any).coordinates[0];
-      lat = (masjid.gps_location as any).coordinates[1];
-    }
+  const coords = parsePostGisPoint(masjid.gps_location);
+  if (coords) {
+    lon = coords.lng;
+    lat = coords.lat;
   }
+
+  // Generate JSON-LD Structured Data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Mosque",
+    "name": masjid.name,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": masjid.address || "",
+      "addressLocality": masjid.city,
+      "addressCountry": masjid.country
+    },
+    ...(lat && lon ? {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": lat,
+        "longitude": lon
+      }
+    } : {})
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header Banner */}
       <div className="bg-[#0F172A] text-white pt-20 pb-12 px-6">
         <div className="max-w-5xl mx-auto">

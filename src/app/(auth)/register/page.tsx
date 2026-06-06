@@ -150,7 +150,7 @@ export default function RegisterPage() {
             width={180}
             height={60}
             priority
-            className="dark:hidden"
+            className="logo-light"
           />
           <Image
             src="/Home Masjid (Dark BG).svg"
@@ -158,7 +158,7 @@ export default function RegisterPage() {
             width={180}
             height={60}
             priority
-            className="hidden dark:block"
+            className="logo-dark"
           />
           <p className="mt-4 text-muted-foreground text-sm">
             Your community, connected

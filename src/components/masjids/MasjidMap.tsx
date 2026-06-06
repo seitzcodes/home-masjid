@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Map, { Marker, NavigationControl, Popup } from "react-map-gl/mapbox";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Home, MapPin } from "lucide-react";
+import { parsePostGisPoint } from "@/lib/utils/postgis";
 
 interface Masjid {
   id: string;
@@ -56,20 +57,10 @@ export default function MasjidMap({ masjids, homeMasjidId, userLocation }: Masji
         )}
 
         {masjids.map((masjid) => {
-          // Parse PostGIS POINT string if it comes through as string, or use object if parsed
-          let lon = 0, lat = 0;
-          if (typeof masjid.gps_location === 'string') {
-            const match = masjid.gps_location.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-            if (match) {
-              lon = parseFloat(match[1]);
-              lat = parseFloat(match[2]);
-            }
-          } else if (masjid.gps_location?.coordinates) {
-            lon = masjid.gps_location.coordinates[0];
-            lat = masjid.gps_location.coordinates[1];
-          }
-
-          if (lon === 0 && lat === 0) return null;
+          const coords = parsePostGisPoint(masjid.gps_location);
+          if (!coords) return null;
+          
+          const { lon, lat } = { lon: coords.lng, lat: coords.lat };
 
           const isHome = masjid.id === homeMasjidId;
           const isVerified = masjid.is_verified;
@@ -98,17 +89,9 @@ export default function MasjidMap({ masjids, homeMasjidId, userLocation }: Masji
         })}
 
         {selectedMasjid && (() => {
-          let lon = 0, lat = 0;
-          if (typeof selectedMasjid.gps_location === 'string') {
-            const match = selectedMasjid.gps_location.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-            if (match) {
-              lon = parseFloat(match[1]);
-              lat = parseFloat(match[2]);
-            }
-          } else if (selectedMasjid.gps_location?.coordinates) {
-            lon = selectedMasjid.gps_location.coordinates[0];
-            lat = selectedMasjid.gps_location.coordinates[1];
-          }
+          const coords = parsePostGisPoint(selectedMasjid.gps_location);
+          if (!coords) return null;
+          const { lon, lat } = { lon: coords.lng, lat: coords.lat };
 
           return (
             <Popup

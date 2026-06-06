@@ -16,14 +16,15 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
   const [radiusKm, setRadiusKm] = useState(50000);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [targetDemographics, setTargetDemographics] = useState<string[]>([]);
+  const [facilitiesFilter, setFacilitiesFilter] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [viewMode, setViewMode] = useState<"map" | "list">("map"); // Mobile view toggle
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [loading, setLoading] = useState(false);
 
   const supabase = createClient();
-
-  useEffect(() => {
+  const handleRequestLocation = () => {
     if ("geolocation" in navigator) {
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setUserLocation({
@@ -33,10 +34,14 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
         },
         (error) => {
           console.error("Error getting location:", error);
+          setLoading(false);
+          alert("Could not get your location. Please check browser permissions.");
         }
       );
+    } else {
+      alert("Geolocation is not supported by your browser.");
     }
-  }, []);
+  };
 
   useEffect(() => {
     async function fetchLocalMasjids() {
@@ -57,6 +62,14 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
           if (verifiedOnly) {
             filtered = filtered.filter((m: any) => m.is_verified);
           }
+          // Note: Facility filtering would ideally happen in the RPC or via a Postgres JSONB query.
+          // Since we are filtering locally for now on a small dataset:
+          if (facilitiesFilter.length > 0) {
+            filtered = filtered.filter((m: any) => {
+              if (!m.facilities) return false;
+              return facilitiesFilter.every(f => m.facilities[f] === true);
+            });
+          }
           setMasjids(filtered);
         } else {
           console.error("Error fetching nearby masjids:", error);
@@ -66,6 +79,13 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
         let query = supabase.from("masjids").select("*");
         if (verifiedOnly) query = query.eq("is_verified", true);
         
+        // JSONB query for facilities
+        if (facilitiesFilter.length > 0) {
+          facilitiesFilter.forEach(f => {
+            query = query.contains('facilities', { [f]: true });
+          });
+        }
+        
         const { data } = await query;
         if (data) setMasjids(data);
       }
@@ -74,7 +94,7 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
     }
 
     fetchLocalMasjids();
-  }, [userLocation, radiusKm, verifiedOnly, supabase]);
+  }, [userLocation, radiusKm, verifiedOnly, facilitiesFilter, supabase]);
 
   const handleSetHome = (id: string) => {
     console.log("Setting home masjid:", id);
@@ -88,8 +108,10 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
         setRadiusKm={setRadiusKm}
         verifiedOnly={verifiedOnly}
         setVerifiedOnly={setVerifiedOnly}
-        targetDemographics={targetDemographics}
-        setTargetDemographics={setTargetDemographics}
+        facilitiesFilter={facilitiesFilter}
+        setFacilitiesFilter={setFacilitiesFilter}
+        onRequestLocation={handleRequestLocation}
+        hasLocation={!!userLocation}
       />
 
       {/* Mobile Toggle */}
