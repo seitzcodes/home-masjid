@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function MasjidsDirectoryPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Fetch initial base list (first 50) for fast SSR
   const { data: initialMasjids } = await supabase

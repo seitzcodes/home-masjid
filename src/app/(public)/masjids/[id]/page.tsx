@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default async function MasjidProfilePage({ params }: Props) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const masjidId = params.id;
 
   // The user instructed us to fetch related data (programs, projects) 
