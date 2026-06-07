@@ -19,7 +19,8 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
   const [facilitiesFilter, setFacilitiesFilter] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [homeMasjidId, setHomeMasjidId] = useState<string | null>(null);
   const [nextPrograms, setNextPrograms] = useState<Record<string, string>>({});
 
   const supabase = createClient();
@@ -94,7 +95,20 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
       setLoading(false);
     }
 
+    async function fetchUserProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await (supabase as any)
+          .from("user_profiles")
+          .select("home_masjid_id")
+          .eq("id", user.id)
+          .single();
+        if (profile?.home_masjid_id) setHomeMasjidId(profile.home_masjid_id);
+      }
+    }
+
     fetchLocalMasjids();
+    fetchUserProfile();
   }, [userLocation, radiusKm, verifiedOnly, facilitiesFilter, supabase]);
 
   // Fetch next programs for the current masjids
@@ -177,11 +191,11 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
             </h2>
             
             {masjids.map(masjid => (
-              <MasjidPreviewCard 
+                <MasjidPreviewCard 
                 key={masjid.id} 
                 {...masjid} 
                 nextProgramTitle={nextPrograms[masjid.id]}
-                onSetHome={handleSetHome}
+                isHome={homeMasjidId === masjid.id}
               />
             ))}
 

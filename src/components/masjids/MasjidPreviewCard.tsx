@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapPin, CheckCircle, Navigation, Clock } from "lucide-react";
 import { PrayerTimes, Coordinates, CalculationMethod } from "adhan";
 import { parsePostGisPoint } from "@/lib/utils/postgis";
+import { SetHomeMasjidButton } from "@/components/masjids/SetHomeMasjidButton";
 
 interface MasjidPreviewCardProps {
   id: string;
@@ -16,7 +17,7 @@ interface MasjidPreviewCardProps {
   gps_location?: string;
   timezone?: string;
   nextProgramTitle?: string;
-  onSetHome?: (id: string) => void;
+  isHome?: boolean;
 }
 
 export default function MasjidPreviewCard({
@@ -29,7 +30,7 @@ export default function MasjidPreviewCard({
   gps_location,
   timezone,
   nextProgramTitle,
-  onSetHome,
+  isHome = false,
 }: MasjidPreviewCardProps) {
   // Format distance
   const distance = distance_meters 
@@ -121,12 +122,7 @@ export default function MasjidPreviewCard({
         </div>
         
         <div className="flex gap-2">
-          <button 
-            onClick={() => onSetHome?.(id)}
-            className="text-xs px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors"
-          >
-            Set Home
-          </button>
+          <SetHomeMasjidButton masjidId={id} isHome={isHome} className="text-xs py-1.5" />
           <Link
             href={`/masjids/${id}`}
             className="text-xs px-3 py-1.5 bg-[#0F172A] text-white rounded-md hover:bg-slate-800 transition-colors"

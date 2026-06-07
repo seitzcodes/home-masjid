@@ -96,3 +96,59 @@ export async function initiateDonation(formData: FormData) {
     return { error: "Failed to get payment URL" };
   }
 }
+
+export async function toggleFollowMasjid(masjidId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be logged in to follow a masjid." };
+  }
+
+  // Check if currently following
+  const { data: existing } = await (supabase as any)
+    .from("masjid_followers")
+    .select("masjid_id")
+    .eq("masjid_id", masjidId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existing) {
+    // Unfollow
+    const { error } = await (supabase as any)
+      .from("masjid_followers")
+      .delete()
+      .eq("masjid_id", masjidId)
+      .eq("user_id", user.id);
+    if (error) return { error: error.message };
+    return { success: true, following: false };
+  } else {
+    // Follow
+    const { error } = await (supabase as any)
+      .from("masjid_followers")
+      .insert({ masjid_id: masjidId, user_id: user.id });
+    if (error) return { error: error.message };
+    return { success: true, following: true };
+  }
+}
+
+export async function setHomeMasjid(masjidId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be logged in to set a home masjid." };
+  }
+
+  const { error } = await (supabase as any)
+    .from("user_profiles")
+    .update({ home_masjid_id: masjidId })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Set Home Masjid error:", error);
+    return { error: error.message };
+  }
+
+  return { success: true };
+}

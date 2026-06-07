@@ -6,6 +6,8 @@ import ProfileTabs from "@/components/masjids/ProfileTabs";
 import { Metadata, ResolvingMetadata } from "next";
 import { parsePostGisPoint } from "@/lib/utils/postgis";
 import { DonationSuccessBanner } from "@/components/donation/DonationSuccessBanner";
+import { FollowMasjidButton } from "@/components/masjids/FollowMasjidButton";
+import { SetHomeMasjidButton } from "@/components/masjids/SetHomeMasjidButton";
 import { MasjidHijriDate } from "@/components/masjids/MasjidHijriDate";
 
 export const revalidate = 3600; // Revalidate every hour
@@ -98,6 +100,32 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
     .eq("masjid_id", masjidId)
     .eq("hijri_year", currentHijriYear)
     .maybeSingle();
+
+  // Get user session for personalization
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Get Follower count
+  const { count: followerCount } = await (supabase as any).from("masjid_followers")
+    .select("*", { count: "exact", head: true })
+    .eq("masjid_id", masjidId);
+
+  let isFollowing = false;
+  let isHome = false;
+
+  if (user) {
+    const { data: followData } = await (supabase as any).from("masjid_followers")
+      .select("masjid_id")
+      .eq("masjid_id", masjidId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (followData) isFollowing = true;
+
+    const { data: profile } = await (supabase as any).from("user_profiles")
+      .select("home_masjid_id")
+      .eq("id", user.id)
+      .single();
+    if (profile?.home_masjid_id === masjidId) isHome = true;
+  }
 
   // Fetch recent donors for the donor wall
   // We join via projects -> donations -> user_profiles
@@ -208,7 +236,7 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
                 <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-600"></div>
                 <div className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
-                  <span>245 Followers</span>
+                  <span>{followerCount || 0} Followers</span>
                 </div>
               </div>
             </div>
@@ -216,9 +244,7 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
             {/* Quick Actions Desktop */}
             <div className="hidden md:flex flex-col items-end gap-3">
               {masjid.gps_location && <MasjidHijriDate gpsLocation={masjid.gps_location} />}
-              <button className="px-5 py-2.5 bg-white text-[#0F172A] rounded-lg font-semibold hover:bg-slate-100 transition-colors">
-                Follow Updates
-              </button>
+              <FollowMasjidButton masjidId={masjidId} initialFollowing={isFollowing} />
             </div>
           </div>
         </div>
@@ -227,12 +253,8 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
       {/* Control Strip (Mobile + Desktop) */}
       <div className="bg-white dark:bg-[#1E293B] border-b border-slate-200 dark:border-slate-700 sticky top-16 z-20 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 py-3 flex gap-3 overflow-x-auto hide-scrollbar">
-          <button className="flex-1 md:flex-none whitespace-nowrap px-4 py-2 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all flex items-center justify-center gap-2">
-            <CheckCircle className="w-4 h-4" /> Set as Home Masjid
-          </button>
-          <button className="flex-1 md:hidden whitespace-nowrap px-4 py-2 bg-[#0F172A] text-white rounded-lg font-medium">
-            Follow Updates
-          </button>
+          <SetHomeMasjidButton masjidId={masjidId} isHome={isHome} className="flex-1 md:flex-none whitespace-nowrap" />
+          <FollowMasjidButton masjidId={masjidId} initialFollowing={isFollowing} className="flex-1 md:hidden whitespace-nowrap" />
           {lat && lon && (
             <a 
               href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
