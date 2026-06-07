@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import RealtimePostFeed from "./RealtimePostFeed";
 import { DonationModal } from "../donation/DonationModal";
-import { Clock, MessageSquare, Calendar, Heart } from "lucide-react";
+import { Clock, MessageSquare, Calendar, Heart, Moon } from "lucide-react";
 
 import { PrayerTimes, Coordinates, CalculationMethod } from "adhan";
 import { parsePostGisPoint } from "@/lib/utils/postgis";
@@ -12,46 +12,85 @@ interface ProfileTabsProps {
   masjidId: string;
   programs: any[];
   projects: any[];
+  jumuahSchedules?: any[];
+  ramadanSchedule?: any;
   gps_location?: string;
   timezone?: string;
 }
 
-export default function ProfileTabs({ masjidId, programs, projects, gps_location, timezone }: ProfileTabsProps) {
-  const [activeTab, setActiveTab] = useState<"prayer" | "social" | "programs" | "projects">("prayer");
+export default function ProfileTabs({ masjidId, programs, projects, jumuahSchedules = [], ramadanSchedule = null, gps_location, timezone }: ProfileTabsProps) {
+  const [activeTab, setActiveTab] = useState<"prayer" | "social" | "programs" | "projects" | "ramadan">("prayer");
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   return (
     <div className="mt-8">
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar">
+      <div 
+        className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar"
+        role="tablist"
+        aria-label="Masjid Information Tabs"
+      >
         <button 
           onClick={() => setActiveTab("prayer")}
+          role="tab"
+          aria-selected={activeTab === "prayer"}
+          aria-controls="tabpanel-prayer"
+          id="tab-prayer"
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium whitespace-nowrap transition-colors ${activeTab === "prayer" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
         >
           <Clock className="w-4 h-4" /> Prayer Schedule
         </button>
         <button 
           onClick={() => setActiveTab("social")}
+          role="tab"
+          aria-selected={activeTab === "social"}
+          aria-controls="tabpanel-social"
+          id="tab-social"
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium whitespace-nowrap transition-colors ${activeTab === "social" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
         >
           <MessageSquare className="w-4 h-4" /> Social Timeline
         </button>
         <button 
           onClick={() => setActiveTab("programs")}
+          role="tab"
+          aria-selected={activeTab === "programs"}
+          aria-controls="tabpanel-programs"
+          id="tab-programs"
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium whitespace-nowrap transition-colors ${activeTab === "programs" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
         >
           <Calendar className="w-4 h-4" /> Programs & Events
         </button>
         <button 
           onClick={() => setActiveTab("projects")}
+          role="tab"
+          aria-selected={activeTab === "projects"}
+          aria-controls="tabpanel-projects"
+          id="tab-projects"
           className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium whitespace-nowrap transition-colors ${activeTab === "projects" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
         >
           <Heart className="w-4 h-4" /> Active Projects
         </button>
+        {ramadanSchedule && (ramadanSchedule.taraweeh_time || ramadanSchedule.iftar_provided || ramadanSchedule.itikaf_available) && (
+          <button 
+            onClick={() => setActiveTab("ramadan")}
+            role="tab"
+            aria-selected={activeTab === "ramadan"}
+            aria-controls="tabpanel-ramadan"
+            id="tab-ramadan"
+            className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium whitespace-nowrap transition-colors ${activeTab === "ramadan" ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
+          >
+            <Moon className="w-4 h-4" /> Ramadan Focus
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
-      <div className="py-6">
+      <div 
+        className="py-6"
+        role="tabpanel"
+        id={`tabpanel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+      >
         {activeTab === "prayer" && (() => {
           let prayerTimesObj = null;
           let nextPrayer = "";
@@ -101,8 +140,9 @@ export default function ProfileTabs({ masjidId, programs, projects, gps_location
           ];
 
           return (
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 p-4 font-semibold text-slate-600 text-sm">
+            <>
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200 p-4 font-semibold text-slate-600 text-sm">
                 <div>Prayer</div>
                 <div className="text-center">Adhan (Calculated)</div>
                 <div className="text-right">Iqama (Congregation)</div>
@@ -140,8 +180,74 @@ export default function ProfileTabs({ masjidId, programs, projects, gps_location
                 </div>
               )}
             </div>
+
+            {/* Jumu'ah Schedules Section */}
+            {jumuahSchedules.length > 0 && (
+              <div className="mt-6 bg-[#0F172A] rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-[#0F172A] border-b border-slate-700/50 p-4 font-semibold text-white flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[#D4AF37]" />
+                  Jumu'ah Schedules
+                </div>
+                {jumuahSchedules.map((j) => (
+                  <div key={j.id} className="p-4 border-b border-slate-700/50 last:border-0 text-white flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-lg text-[#D4AF37]">{j.khutbah_time.substring(0, 5)} Khutbah</div>
+                      {j.topic && <div className="text-sm text-slate-300 mt-0.5">Topic: {j.topic}</div>}
+                    </div>
+                    {j.speaker_name && (
+                      <div className="text-right">
+                        <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Khatib</div>
+                        <div className="font-medium">{j.speaker_name}</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
           );
         })()}
+
+        {activeTab === "ramadan" && ramadanSchedule && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden p-6 max-w-2xl">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-foreground">
+              <Moon className="w-6 h-6 text-[#D4AF37]" /> 
+              Ramadan {ramadanSchedule.hijri_year}
+            </h3>
+            
+            <div className="space-y-6">
+              {ramadanSchedule.taraweeh_time && (
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg">
+                  <div className="bg-[#0F172A] p-2 rounded text-white"><Clock className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Taraweeh Congregation</h4>
+                    <p className="text-slate-600 text-sm">Starts strictly at {ramadanSchedule.taraweeh_time.substring(0, 5)} daily.</p>
+                  </div>
+                </div>
+              )}
+              
+              {ramadanSchedule.iftar_provided && (
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg">
+                  <div className="bg-[#D4AF37]/10 p-2 rounded text-[#D4AF37]"><Heart className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Community Iftar</h4>
+                    <p className="text-slate-600 text-sm">This masjid provides public iftar daily. All are welcome.</p>
+                  </div>
+                </div>
+              )}
+              
+              {ramadanSchedule.itikaf_available && (
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg">
+                  <div className="bg-emerald-500/10 p-2 rounded text-emerald-600"><Moon className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">I'tikaf Facilities</h4>
+                    <p className="text-slate-600 text-sm">Facilities are available for the last 10 days of Ramadan.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {activeTab === "social" && (
           <RealtimePostFeed masjidId={masjidId} />

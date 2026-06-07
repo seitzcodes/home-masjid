@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes: redirect unauthenticated users to /login
-  const protectedPaths = ["/dashboard", "/admin"];
+  const protectedPaths = ["/faculty", "/admin", "/account"];
   const isProtected = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -57,7 +57,8 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthPage && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    // Default redirect to their personal account page.
+    url.pathname = "/account";
     return NextResponse.redirect(url);
   }
 

@@ -14,24 +14,29 @@ import {
   X,
   ChevronDown,
   Users,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert,
+  BarChart3,
+  Moon
 } from "lucide-react";
+import { useHijriDate } from "@/hooks/useHijriDate";
 
 const sidebarItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, id: "sidebar-overview" },
-  { href: "/dashboard/programs", label: "Programs", icon: Calendar, id: "sidebar-programs" },
-  { href: "/dashboard/posts", label: "Posts", icon: FileText, id: "sidebar-posts" },
-  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban, id: "sidebar-projects" },
-  { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, id: "sidebar-messages" },
-  { href: "/dashboard/faculty", label: "Faculty", icon: Users, id: "sidebar-faculty" },
-  { href: "/dashboard/community/vouch", label: "Peer Validation", icon: ShieldCheck, id: "sidebar-vouch" },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings, id: "sidebar-settings" },
+  { href: "/faculty", label: "Overview", icon: LayoutDashboard, id: "sidebar-overview" },
+  { href: "/faculty/programs", label: "Programs", icon: Calendar, id: "sidebar-programs" },
+  { href: "/faculty/posts", label: "Posts", icon: FileText, id: "sidebar-posts" },
+  { href: "/faculty/projects", label: "Projects", icon: FolderKanban, id: "sidebar-projects" },
+  { href: "/faculty/messages", label: "Messages", icon: MessageSquare, id: "sidebar-messages" },
+  { href: "/faculty/faculty", label: "Faculty", icon: Users, id: "sidebar-faculty" },
+  { href: "/faculty/community/vouch", label: "Peer Validation", icon: ShieldCheck, id: "sidebar-vouch" },
+  { href: "/faculty/settings", label: "Settings", icon: Settings, id: "sidebar-settings" },
 ];
 
 interface MasjidContext {
   id: string;
   name: string;
   role: string;
+  gps_location?: string;
 }
 
 interface ClaimContext {
@@ -39,18 +44,16 @@ interface ClaimContext {
   masjidName: string;
 }
 
-export default function DashboardClientLayout({
+export default function FacultyClientLayout({
   children,
   masjids,
   pendingClaims,
   userInitials,
-  isSuperAdmin
 }: {
   children: React.ReactNode;
   masjids: MasjidContext[];
   pendingClaims: ClaimContext[];
   userInitials: string;
-  isSuperAdmin?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -58,6 +61,8 @@ export default function DashboardClientLayout({
   // If user has no masjids, they shouldn't see the normal dashboard tools
   const hasMasjids = masjids.length > 0;
   const activeMasjid = hasMasjids ? masjids[0] : null;
+
+  const hijriInfo = useHijriDate(activeMasjid?.gps_location || null);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -77,7 +82,7 @@ export default function DashboardClientLayout({
       >
         <div className="flex h-16 items-center justify-between px-6 border-b border-slate-800">
           <Link
-            href="/dashboard"
+            href="/faculty"
             id="sidebar-logo"
             className="text-lg font-bold text-accent"
           >
@@ -116,25 +121,7 @@ export default function DashboardClientLayout({
               );
             })}
 
-            {isSuperAdmin && (
-              <>
-                <div className="pt-4 pb-2 px-3">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
-                </div>
-                <Link
-                  href="/dashboard/claims"
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    pathname.startsWith("/dashboard/claims")
-                      ? "bg-red-500/10 text-red-400"
-                      : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <ShieldCheck className="h-5 w-5" />
-                  Review Claims
-                </Link>
-              </>
-            )}
+            {/* Admin links removed from Faculty sidebar */}
           </nav>
         ) : (
           <div className="p-4 text-sm text-slate-400">
@@ -169,6 +156,12 @@ export default function DashboardClientLayout({
           </div>
 
           <div className="flex items-center gap-4">
+            {hijriInfo && (
+              <div className="hidden sm:flex items-center text-sm font-medium text-amber-700 dark:text-[#D4AF37] px-3 py-1.5 rounded-full bg-surface border border-border">
+                <Moon className="w-4 h-4 mr-2" />
+                {hijriInfo.dateStr}
+              </div>
+            )}
             <Link href="/" className="text-sm text-muted-foreground hover:text-foreground hidden sm:block">
               View Site
             </Link>

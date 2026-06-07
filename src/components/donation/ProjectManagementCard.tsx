@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Heart, Power, FileText, TrendingUp, Users } from "lucide-react";
-import { toggleProjectStatus } from "@/app/(dashboard)/dashboard/projects/actions";
+import { toggleProjectStatus } from "@/app/(protected)/(faculty)/faculty/projects/actions";
 import Link from "next/link";
 
 interface ProjectManagementCardProps {

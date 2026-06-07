@@ -6,6 +6,7 @@ import ProfileTabs from "@/components/masjids/ProfileTabs";
 import { Metadata, ResolvingMetadata } from "next";
 import { parsePostGisPoint } from "@/lib/utils/postgis";
 import { DonationSuccessBanner } from "@/components/donation/DonationSuccessBanner";
+import { MasjidHijriDate } from "@/components/masjids/MasjidHijriDate";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -84,6 +85,19 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
   const { data: projects } = await (supabase as any).from("projects")
     .select("*")
     .eq("masjid_id", masjidId);
+
+  const { data: jumuahSchedules } = await (supabase as any).from("jumuah_schedules")
+    .select("*")
+    .eq("masjid_id", masjidId)
+    .eq("is_active", true)
+    .order("khutbah_time", { ascending: true });
+
+  const currentHijriYear = 1447; // Hardcoded for demo/MVP
+  const { data: ramadanSchedule } = await (supabase as any).from("ramadan_schedules")
+    .select("*")
+    .eq("masjid_id", masjidId)
+    .eq("hijri_year", currentHijriYear)
+    .maybeSingle();
 
   // Fetch recent donors for the donor wall
   // We join via projects -> donations -> user_profiles
@@ -200,7 +214,8 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
             </div>
 
             {/* Quick Actions Desktop */}
-            <div className="hidden md:flex gap-3">
+            <div className="hidden md:flex flex-col items-end gap-3">
+              {masjid.gps_location && <MasjidHijriDate gpsLocation={masjid.gps_location} />}
               <button className="px-5 py-2.5 bg-white text-[#0F172A] rounded-lg font-semibold hover:bg-slate-100 transition-colors">
                 Follow Updates
               </button>
@@ -237,6 +252,8 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
           masjidId={masjidId} 
           programs={programs || []} 
           projects={projects || []} 
+          jumuahSchedules={jumuahSchedules || []}
+          ramadanSchedule={ramadanSchedule || null}
           gps_location={masjid.gps_location}
           timezone={masjid.timezone}
         />

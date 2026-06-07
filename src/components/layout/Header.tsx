@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Menu, X, Sun, Moon, User, LogOut, LayoutDashboard, Home, Settings } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, LayoutDashboard, Home, Settings, ShieldAlert } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
+import { useHijriDate } from "@/hooks/useHijriDate";
 
 const navLinks = [
   { href: "/", label: "Home", id: "nav-home" },
@@ -24,7 +25,9 @@ export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isFaculty, setIsFaculty] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const hijriInfo = useHijriDate(null); // Will attempt geolocation, fallback to Joburg
 
   useEffect(() => {
     setMounted(true);
@@ -34,8 +37,9 @@ export default function Header() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        const { data: profileData } = await (supabase as any).from("user_profiles").select("home_masjid_id").eq("id", user.id).single();
+        const { data: profileData } = await (supabase as any).from("user_profiles").select("home_masjid_id, is_superadmin").eq("id", user.id).single();
         setProfile(profileData);
+        setIsSuperAdmin(profileData?.is_superadmin || false);
         
         const { count } = await (supabase as any).from("masjid_faculty").select("*", { count: "exact", head: true }).eq("user_id", user.id);
         setIsFaculty(!!count);
@@ -50,6 +54,7 @@ export default function Header() {
         setUser(null);
         setProfile(null);
         setIsFaculty(false);
+        setIsSuperAdmin(false);
       } else {
         fetchUser();
       }
@@ -121,6 +126,14 @@ export default function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
+            {/* Hijri Date Display */}
+            {hijriInfo && (
+              <div className="hidden lg:flex items-center text-sm font-medium text-amber-700 dark:text-[#D4AF37] px-3 py-1.5 rounded-full bg-surface border border-border">
+                <Moon className="w-4 h-4 mr-2" />
+                {hijriInfo.dateStr}
+              </div>
+            )}
+
             {/* Theme Toggle */}
             {mounted ? (
               <button
@@ -150,32 +163,33 @@ export default function Header() {
                 
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-md bg-surface shadow-lg border border-border py-1 z-50">
-                    {isFaculty ? (
+                    {isSuperAdmin && (
                       <Link
-                        href="/dashboard"
+                        href="/admin"
+                        className="flex items-center px-4 py-2 text-sm text-danger hover:bg-surface-hover"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <ShieldAlert className="mr-2 h-4 w-4" />
+                        Admin Portal
+                      </Link>
+                    )}
+                    {isFaculty && (
+                      <Link
+                        href="/faculty"
                         className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-surface-hover"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Masjid Maintenance
+                        Faculty Portal
                       </Link>
-                    ) : profile?.home_masjid_id ? (
-                      <Link
-                        href={`/masjids/${profile.home_masjid_id}`}
-                        className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-surface-hover"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Home className="mr-2 h-4 w-4" />
-                        My Home Masjid
-                      </Link>
-                    ) : null}
+                    )}
                     <Link
-                      href="/settings"
+                      href="/account"
                       className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-surface-hover"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      <User className="mr-2 h-4 w-4" />
+                      My Account
                     </Link>
                     <button
                       onClick={handleSignOut}
@@ -255,32 +269,33 @@ export default function Header() {
           
           {user ? (
             <div className="flex flex-col gap-2 pt-2 border-t border-border mt-2">
-              {isFaculty ? (
+              {isSuperAdmin && (
                 <Link
-                  href="/dashboard"
+                  href="/admin"
+                  className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-danger hover:bg-surface-hover transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  Admin Portal
+                </Link>
+              )}
+              {isFaculty && (
+                <Link
+                  href="/faculty"
                   className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Masjid Maintenance
+                  Faculty Portal
                 </Link>
-              ) : profile?.home_masjid_id ? (
-                <Link
-                  href={`/masjids/${profile.home_masjid_id}`}
-                  className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Home className="mr-2 h-4 w-4" />
-                  My Home Masjid
-                </Link>
-              ) : null}
+              )}
               <Link
-                href="/settings"
+                href="/account"
                 className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
+                <User className="mr-2 h-4 w-4" />
+                My Account
               </Link>
               <button
                 onClick={handleSignOut}

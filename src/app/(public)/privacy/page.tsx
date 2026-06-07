@@ -1,54 +1,64 @@
+import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Home Masjid",
-  description: "Privacy Policy for Home Masjid",
+  description: "Privacy Policy for Home Masjid, outlining how we collect, use, and protect your data.",
 };
 
-export default function PrivacyPage() {
+export default function PrivacyPolicyPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-foreground mb-8">Privacy Policy</h1>
-      
-      <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-        <p>Last updated: {new Date().toLocaleDateString()}</p>
-        
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">1. Introduction</h2>
-          <p>
+    <div className="max-w-4xl mx-auto px-6 py-16">
+      <h1 className="text-4xl font-bold mb-8 text-foreground">Privacy Policy</h1>
+      <div className="prose prose-slate dark:prose-invert max-w-none">
+        <p className="text-lg text-muted-foreground mb-8">
+          Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        </p>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">1. Introduction</h2>
+          <p className="text-muted-foreground leading-relaxed">
             Welcome to Home Masjid. We respect your privacy and are committed to protecting your personal data. 
-            This privacy policy will inform you as to how we look after your personal data when you visit our website.
+            This privacy policy will inform you as to how we look after your personal data when you visit our website 
+            and tell you about your privacy rights.
           </p>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">2. The Data We Collect</h2>
-          <p>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">2. Data We Collect</h2>
+          <p className="text-muted-foreground leading-relaxed">
             We may collect, use, store and transfer different kinds of personal data about you which we have grouped together as follows:
           </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Identity Data</strong> includes first name, last name, username or similar identifier.</li>
-            <li><strong>Contact Data</strong> includes email address and telephone numbers.</li>
-            <li><strong>Technical Data</strong> includes internet protocol (IP) address, your login data, browser type and version.</li>
+          <ul className="list-disc pl-6 text-muted-foreground mt-4 space-y-2">
+            <li><strong>Identity Data:</strong> includes first name, last name, username or similar identifier.</li>
+            <li><strong>Contact Data:</strong> includes email address and telephone numbers.</li>
+            <li><strong>Location Data:</strong> includes your GPS location (if you grant permission) to help you find nearby masjids and calculate accurate prayer times.</li>
+            <li><strong>Transaction Data:</strong> includes details about payments to and from you and other details of donations you have made to masjids through our platform.</li>
           </ul>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">3. How We Use Your Data</h2>
-          <p>
-            We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">3. Third-Party Services</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            We use third-party services to facilitate our platform operations. Specifically:
           </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Where we need to perform the contract we are about to enter into or have entered into with you.</li>
-            <li>Where it is necessary for our legitimate interests (or those of a third party) and your interests and fundamental rights do not override those interests.</li>
-            <li>Where we need to comply with a legal obligation.</li>
+          <ul className="list-disc pl-6 text-muted-foreground mt-4 space-y-2">
+            <li><strong>Paystack:</strong> We use Paystack to securely process donations. We do not store your raw credit card information on our servers.</li>
+            <li><strong>Supabase:</strong> We use Supabase for secure database storage and authentication.</li>
           </ul>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">4. Contact Us</h2>
-          <p>
-            If you have any questions about this privacy policy or our privacy practices, please contact us.
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">4. Data Security</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used, or accessed in an unauthorized way, altered, or disclosed.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">5. Contact Us</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            If you have any questions about this privacy policy or our privacy practices, please contact us at privacy@homemasjid.com.
           </p>
         </section>
       </div>

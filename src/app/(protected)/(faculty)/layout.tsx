@@ -1,23 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import DashboardClientLayout from './DashboardClientLayout';
+import FacultyClientLayout from '@/components/layout/dashboards/FacultyClientLayout';
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function FacultyLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    redirect('/login?redirect=/dashboard');
+    redirect('/login?redirect=/faculty');
   }
 
   // Fetch the user's assigned masjids
   const { data: faculty } = await (supabase as any).from('masjid_faculty')
-    .select('masjid_id, role, masjids(name)')
+    .select('masjid_id, role, masjids(name, gps_location)')
     .eq('user_id', user.id);
 
   const masjids = (faculty || []).map((f: any) => ({
     id: f.masjid_id,
     name: f.masjids?.name,
+    gps_location: f.masjids?.gps_location,
     role: f.role
   }));
 
@@ -34,22 +35,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const userInitials = user.email ? user.email[0].toUpperCase() : 'U';
 
-  // Check if superadmin
-  const { data: profile } = await (supabase as any).from('user_profiles')
-    .select('is_superadmin')
-    .eq('id', user.id)
-    .single();
-
-  const isSuperAdmin = profile?.is_superadmin ?? false;
-
   return (
-    <DashboardClientLayout 
+    <FacultyClientLayout 
       masjids={masjids} 
       pendingClaims={pendingClaims} 
       userInitials={userInitials}
-      isSuperAdmin={isSuperAdmin}
     >
       {children}
-    </DashboardClientLayout>
+    </FacultyClientLayout>
   );
 }

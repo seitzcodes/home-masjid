@@ -176,6 +176,7 @@ export default function RegisterPage() {
             id="register-error"
             className="mb-4 rounded-lg bg-danger/10 border border-danger/20 px-4 py-3 text-sm text-danger"
             role="alert"
+            aria-live="polite"
           >
             {error}
           </div>

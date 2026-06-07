@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
-import { createProject } from "@/app/(dashboard)/dashboard/projects/actions";
+import { createProject } from "@/app/(protected)/(faculty)/faculty/projects/actions";
 import { X, Upload, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export function CreateProjectForm() {
