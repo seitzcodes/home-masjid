@@ -157,25 +157,9 @@ export default function DirectoryClientLayout({ initialMasjids }: DirectoryClien
         setFacilitiesFilter={setFacilitiesFilter}
         onRequestLocation={handleRequestLocation}
         hasLocation={!!userLocation}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
       />
-
-      {/* Mobile Toggle */}
-      <div className="md:hidden p-3 bg-white border-b border-slate-200 flex justify-center">
-        <div className="bg-slate-100 p-1 rounded-lg flex w-full max-w-xs">
-          <button 
-            onClick={() => setViewMode("list")}
-            className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
-          >
-            <List className="w-4 h-4" /> List
-          </button>
-          <button 
-            onClick={() => setViewMode("map")}
-            className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "map" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
-          >
-            <MapIcon className="w-4 h-4" /> Map
-          </button>
-        </div>
-      </div>
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Map Side (Left on Desktop) */}

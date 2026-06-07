@@ -1,5 +1,6 @@
 import { Users, Calendar, FileText, Heart, Activity } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import PendingJanazahs from "./PendingJanazahs";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,8 +23,19 @@ export default async function DashboardPage() {
   let postCount = 0;
   let totalDonations = 0;
   let recentActivity: any[] = [];
+  let pendingJanazahs: any[] = [];
 
   if (masjidId) {
+    // Fetch pending janazahs
+    const { data: janazahs } = await (supabase as any).from("janazahs")
+      .select("*")
+      .eq("masjid_id", masjidId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    
+    if (janazahs) {
+      pendingJanazahs = janazahs;
+    }
     // Fetch Followers count
     const { count: fCount } = await (supabase as any).from("followers")
       .select("*", { count: "exact", head: true })
@@ -111,6 +123,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Pending Janazah Notices */}
+      <PendingJanazahs pendingList={pendingJanazahs} />
 
       {/* Stat Cards */}
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

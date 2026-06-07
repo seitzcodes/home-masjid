@@ -1,7 +1,7 @@
 import React from "react";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { MapPin, Users, CheckCircle, Navigation, Heart, RefreshCw } from "lucide-react";
+import { MapPin, Users, CheckCircle, Navigation, Heart, RefreshCw, Share2, AlertCircle } from "lucide-react";
 import ProfileTabs from "@/components/masjids/ProfileTabs";
 import { Metadata, ResolvingMetadata } from "next";
 import { parsePostGisPoint } from "@/lib/utils/postgis";
@@ -9,6 +9,8 @@ import { DonationSuccessBanner } from "@/components/donation/DonationSuccessBann
 import { FollowMasjidButton } from "@/components/masjids/FollowMasjidButton";
 import { SetHomeMasjidButton } from "@/components/masjids/SetHomeMasjidButton";
 import { MasjidHijriDate } from "@/components/masjids/MasjidHijriDate";
+import Link from "next/link";
+import JanazahBanner from "@/components/masjids/JanazahBanner";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -255,6 +257,12 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
         <div className="max-w-5xl mx-auto px-6 py-3 flex gap-3 overflow-x-auto hide-scrollbar">
           <SetHomeMasjidButton masjidId={masjidId} isHome={isHome} className="flex-1 md:flex-none whitespace-nowrap" />
           <FollowMasjidButton masjidId={masjidId} initialFollowing={isFollowing} className="flex-1 md:hidden whitespace-nowrap" />
+          <Link
+            href={`/masjids/${masjidId}/report-janazah`}
+            className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <AlertCircle className="w-4 h-4" /> Report Janazah
+          </Link>
           {lat && lon && (
             <a 
               href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
@@ -270,6 +278,7 @@ export default async function MasjidProfilePage({ params, searchParams }: Props)
 
       {/* Main Content Area */}
       <main className="max-w-5xl mx-auto px-6 mt-6 space-y-8">
+        <JanazahBanner masjidId={masjidId} />
         <ProfileTabs 
           masjidId={masjidId} 
           programs={programs || []} 

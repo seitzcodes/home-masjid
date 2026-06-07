@@ -7,7 +7,7 @@ async function run() {
   
   try {
     await client.connect();
-    const sql = fs.readFileSync('supabase/migrations/20260607000009_privacy_and_social.sql', 'utf8');
+    const sql = fs.readFileSync('supabase/migrations/20260607000010_janazah_system.sql', 'utf8');
     await client.query(sql);
     console.log("Migration applied successfully!");
   } catch (err) {
