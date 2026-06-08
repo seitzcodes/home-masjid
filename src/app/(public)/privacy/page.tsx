@@ -61,6 +61,17 @@ export default function PrivacyPolicyPage() {
             If you have any questions about this privacy policy or our privacy practices, please contact us at privacy@homemasjid.com.
           </p>
         </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">6. Child Safety and Reporting</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Protecting children is of paramount importance to us. In accordance with Google Play's Child Safety Standards policy, Home Masjid is committed to keeping our platform free of Child Sexual Abuse and Exploitation (CSAE).
+          </p>
+          <ul className="list-disc pl-6 text-muted-foreground mt-4 space-y-2">
+            <li>If you report an incident of CSAE or CSAM using our in-app reporting mechanisms or via email at <strong>safety@homemasjid.com</strong>, we collect the necessary information to thoroughly investigate the claim.</li>
+            <li>We may share user data, metadata, and report details with relevant law enforcement agencies and child protection organizations if we determine that a user has violated our zero-tolerance policy on child safety.</li>
+          </ul>
+        </section>
       </div>
     </div>
   );
