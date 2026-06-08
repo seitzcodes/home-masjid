@@ -3,6 +3,8 @@ import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import RealtimeNotificationWrapper from "@/components/layout/RealtimeNotificationWrapper";
+import { SWRegister } from "@/components/pwa/SWRegister";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -49,7 +51,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <RealtimeNotificationWrapper>
+            <SWRegister />
             {children}
+            <InstallPrompt />
           </RealtimeNotificationWrapper>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
